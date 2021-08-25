@@ -1,0 +1,87 @@
+{
+    "id": "sales-system",
+    "baseNameSpace": "http://data.test.io/sales/",
+    "baseUri": "http://data.test.io/sales/",
+    "database": "sales_db",
+    "databaseServer": "my_database_server_for_sales",
+    "port": "5432",
+    "postMappings": [
+        {
+            "datasetName": "datahub.Testdata",
+            "tableName": "Testdata",
+            "query": "INSERT INTO Testdata (id, foo, bar) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET foo=$2, bar=$3;",
+            "config": {
+                "databaseServer": "[DB SERVER]",
+                "database": "[DBNAME]",
+                "port": "1234",
+                "schema": "SalesLT",
+
+                "user": {
+                    "type": "direct",
+                    "key": "[USERNAME]"
+                },
+                "password": {
+                    "type": "direct",
+                    "key": "[PASSWORD]"
+                }
+            },
+            "fieldMappings": [
+                {
+                    "fieldName": "foo",
+                    "order": 1
+                },
+                {
+                    "fieldName": "bar",
+                    "order": 2
+                }
+            ]
+        }
+    ],
+    "schema": "",
+    "tableMappings": [
+        {
+            "TableName" : "Address",
+            "EntityIdConstructor" : "addresses/%s",
+            "Types" : [ "http://data.test.io/sales/Address" ],
+            "ColumnMappings" : {
+                "AddressId" : {
+                    "IsIdColumn" : true
+                }
+            }
+        },
+        {
+            "TableName" : "Product",
+            "EntityIdConstructor" : "products/%s",
+            "Types" : [ "http://data.test.io/sales/Product" ],
+            "ColumnMappings" : {
+                "ProductId" : {
+                    "IsIdColumn" : true
+                },
+                "ProductCategoryID" : {
+                    "IsReference" : true,
+                    "ReferenceTemplate" : "http://data.test.io/sales/categories/%s"
+                }
+            }
+        },
+        {
+            "TableName" : "Customer",
+            "EntityIdConstructor" : "customers/%s",
+            "Types" : [ "http://data.test.io/sales/Customer" ],
+            "ColumnMappings" : {
+                "CustomerId" : {
+                    "IsIdColumn" : true
+                },
+                "PasswordHash" : {
+                    "IgnoreColumn" : true
+                },
+                "PasswordSalt" : {
+                    "IgnoreColumn" : true
+                },
+                "SalesPerson" : {
+                    "PropertyName" : "SalesPersonName"
+                }
+            }
+        }
+    ],
+    "type": "content"
+}

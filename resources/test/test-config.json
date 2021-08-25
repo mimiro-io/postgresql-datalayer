@@ -1,0 +1,59 @@
+{
+  "id": "test-import",
+  "databaseServer": "localhost",
+  "baseUri": "http://data.test.io/testnamespace/",
+  "database": "test_database",
+  "port": "5432",
+  "schema": "",
+  "baseNameSpace": "http://data.test.io/newtestnamespace/",
+  "tableMappings": [
+    {
+      "tableName": "Product",
+      "query": "SELECT p.product_id AS productId, p.data->'orderID' AS orderId FROM product %s;",
+      "nameSpace": "product",
+      "entityIdConstructor": "product/%s",
+      "types": [
+        "http://data.test.io/newtestnamespace/Product"
+      ],
+      "columnMappings": [
+        {
+          "fieldName": "productId",
+          "isIdColumn": true
+        },
+        {
+          "fieldName": "orderId",
+          "isReference": true,
+          "referenceTemplate": "http://data.test.io/newtestnamespace/order/%s"
+        }
+      ]
+    },
+    {
+      "tableName": "order",
+      "nameSpace": "order",
+      "entityIdConstructor": "order/%s",
+      "types": [
+        "http://data.test.io/newtestnamespace/Order"
+      ],
+      "columnMappings": [
+        {
+          "fieldName": "orderId",
+          "isIdColumn": true
+        }
+      ]
+    },
+    {
+      "tableName": "customer",
+      "nameSpace": "customer",
+      "entityIdConstructor": "customer/%s",
+      "types": [
+        "http://data.test.io/newtestnamespace/Customer"
+      ],
+      "columnMappings": [
+        {
+          "fieldName": "customerId",
+          "isIdColumn": true
+        }
+      ]
+    }
+  ]
+}
