@@ -1,4 +1,4 @@
-ame: Build and push docker image to dockerhub
+name: Build and push docker image to dockerhub
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 jobs:
   docker:
     name: Deploy docker image
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Check out source code
         uses: actions/checkout@v2
@@ -16,6 +16,10 @@ jobs:
       - name: Set github tag output
         id: vars
         run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
         id: docker_login
