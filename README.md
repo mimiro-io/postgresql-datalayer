@@ -1,6 +1,8 @@
-# postgresql-datalayer
+# PostgreSQL Data Layer
 
-Datahub Data Layer for Postgres
+A Data Layer for PostgreSQL (https://www.postgresql.org/) that conforms to the Universal Data API specification (https://open.mimiro.io/specifications/uda/latest.html). This data layer can be used in conjunction with the MIMIRO data hub (https://github.com/mimiro-io/datahub) to create a modern data fabric. The PostgreSQL data layer can be configured to expose tables and views from a PostgreSQL database as a stream of changes or a current snapshot. Rows in a table are represented in JSON according the Entity Graph Data model that is described in the UDA specification. This data layer can be run as a standalone binary or as a docker container.
+
+Releases of this data layer are published to docker hub in the repository: `mimiro/postgresql-datalayer`
 
 ## Testing
 
@@ -80,10 +82,6 @@ By default the PROFILE is set to local, to easier be able to run on local machin
 security features, and must NOT be set to local in AWS. It should be PROFILE=dev or PROFILE=prod.
 
 This also changes the loggers.
-
-## Deployment
-
-TBA
 
 ## Configuration
 
