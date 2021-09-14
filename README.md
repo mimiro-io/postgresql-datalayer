@@ -23,8 +23,7 @@ or
 make build && bin/server
 ```
 
-Ensure a config file exists in the location configured in the CONFIG_LOCATION
-variable
+Ensure a config file exists in the location configured in the CONFIG_LOCATION variable
 
 With Docker
 
