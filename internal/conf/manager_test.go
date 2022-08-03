@@ -52,8 +52,8 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-	if config.Database != "test_database" {
-		t.Errorf("%s != test_database", config.Database)
+	if config.Database != "psql_test" {
+		t.Errorf("%s != psql_test", config.Database)
 	}
 
 }
