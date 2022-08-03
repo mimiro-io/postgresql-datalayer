@@ -3,7 +3,7 @@ module github.com/mimiro-io/postgresql-datalayer
 go 1.18
 
 require (
-	github.com/DataDog/datadog-go v4.8.3+incompatible
+	github.com/DataDog/datadog-go/v5 v5.1.1
 	github.com/bamzi/jobrunner v1.0.0
 	github.com/bcicen/jstream v1.0.1
 	github.com/docker/go-connections v0.4.0
@@ -23,7 +23,7 @@ require (
 )
 
 require (
-	github.com/Microsoft/go-winio v0.4.17 // indirect
+	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/docker v20.10.11+incompatible // indirect
 	github.com/docker/go-units v0.4.0 // indirect
