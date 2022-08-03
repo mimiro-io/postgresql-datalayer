@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package postgres
@@ -7,6 +8,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/franela/goblin"
 	"github.com/jackc/pgx/v4"
+	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/fx"
 	"io/ioutil"
@@ -46,7 +48,7 @@ func TestIntegration(t *testing.T) {
 			ip, _ := postgresC.Host(ctx)
 			port := actualPort.Port()
 
-			testConf := replaceTestConf("./resources/test/postgres-local.json", ip, port, t)
+			testConf := replaceTestConf("./resources/test/test-config.json", ip, port, t)
 			defer os.Remove(testConf.Name())
 			os.Setenv("SERVER_PORT", "17777")
 			os.Setenv("AUTHORIZATION_MIDDLEWARE", "noop")

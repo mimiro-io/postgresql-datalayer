@@ -1,59 +1,110 @@
 {
-  "id": "test-import",
-  "databaseServer": "localhost",
-  "baseUri": "http://data.test.io/testnamespace/",
-  "database": "test_database",
-  "port": "5432",
-  "schema": "",
-  "baseNameSpace": "http://data.test.io/newtestnamespace/",
-  "tableMappings": [
-    {
-      "tableName": "Product",
-      "query": "SELECT p.product_id AS productId, p.data->'orderID' AS orderId FROM product %s;",
-      "nameSpace": "product",
-      "entityIdConstructor": "product/%s",
-      "types": [
-        "http://data.test.io/newtestnamespace/Product"
-      ],
-      "columnMappings": [
+    "id": "test-import",
+    "databaseServer": "localhost",
+    "baseUri": "http://data.test.io/testnamespace/",
+    "database": "psql_test",
+    "port": "5432",
+    "username": "postgres",
+    "password": "postgres",
+    "schema": "postgresql",
+    "baseNameSpace": "http://data.test.io/newtestnamespace/",
+    "tableMappings": [
         {
-          "fieldName": "productId",
-          "isIdColumn": true
+            "tableName": "Product",
+            "query": "SELECT p.product_id AS productId, p.data->'orderID' AS orderId FROM product %s;",
+            "nameSpace": "product",
+            "entityIdConstructor": "product/%s",
+            "types": [
+                "http://data.test.io/newtestnamespace/Product"
+            ],
+            "columnMappings": [
+                {
+                    "fieldName": "productId",
+                    "isIdColumn": true
+                },
+                {
+                    "fieldName": "orderId",
+                    "isReference": true,
+                    "referenceTemplate": "http://data.test.io/newtestnamespace/order/%s"
+                }
+            ]
         },
         {
-          "fieldName": "orderId",
-          "isReference": true,
-          "referenceTemplate": "http://data.test.io/newtestnamespace/order/%s"
-        }
-      ]
-    },
-    {
-      "tableName": "order",
-      "nameSpace": "order",
-      "entityIdConstructor": "order/%s",
-      "types": [
-        "http://data.test.io/newtestnamespace/Order"
-      ],
-      "columnMappings": [
+            "tableName": "order",
+            "nameSpace": "order",
+            "entityIdConstructor": "order/%s",
+            "types": [
+                "http://data.test.io/newtestnamespace/Order"
+            ],
+            "columnMappings": [
+                {
+                    "fieldName": "orderId",
+                    "isIdColumn": true
+                }
+            ]
+        },
         {
-          "fieldName": "orderId",
-          "isIdColumn": true
+            "tableName": "customer",
+            "nameSpace": "customer",
+            "entityIdConstructor": "customer/%s",
+            "types": [
+                "http://data.test.io/newtestnamespace/Customer"
+            ],
+            "columnMappings": [
+                {
+                    "fieldName": "customerId",
+                    "isIdColumn": true
+                }
+            ]
         }
-      ]
-    },
-    {
-      "tableName": "customer",
-      "nameSpace": "customer",
-      "entityIdConstructor": "customer/%s",
-      "types": [
-        "http://data.test.io/newtestnamespace/Customer"
-      ],
-      "columnMappings": [
+    ],
+    "postMappings": [
         {
-          "fieldName": "customerId",
-          "isIdColumn": true
+            "datasetName": "Product",
+            "tableName": "product",
+            "query": "INSERT INTO product (id, product_id, productprice, date, reporter, timestamp, version) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO UPDATE SET product_id=$2, productprice=$3, date=$4, reporter=$5, timestamp=$6, version=$7;",
+
+            "config": {
+                "databaseServer": "localhost",
+                "database": "psql_test",
+                "port": "5432",
+                "schema": "postgresql",
+
+                "user": {
+                    "type": "direct",
+                    "key": "postgres"
+                },
+                "password": {
+                    "type": "direct",
+                    "key": "postgres"
+                }
+            },
+            "fieldMappings": [
+                {
+                    "fieldName": "Product_Id",
+                    "order": 1
+                },
+                {
+                    "fieldName": "ProductPrice",
+                    "order": 2
+                },
+                {
+                    "fieldName": "Date",
+                    "order": 3
+                },
+                {
+                    "fieldName": "Reporter",
+                    "order": 4
+                },
+                {
+                    "fieldName": "Timestamp",
+                    "order": 5
+                },
+                {
+                    "fieldName": "Version",
+                    "order": 6
+                }
+            ]
         }
-      ]
-    }
-  ]
+    ]
 }
