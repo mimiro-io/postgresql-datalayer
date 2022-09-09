@@ -1,4 +1,9 @@
-FROM golang:1.18.0 as builder
+FROM golang:1.19.1-alpine3.16 as builder
+
+# Install git + SSL ca certificates.
+# Git is required for fetching the dependencies.
+# Ca-certificates is required to call HTTPS endpoints.
+RUN apk update && apk add --no-cache git gcc musl-dev ca-certificates tzdata && update-ca-certificates
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -27,17 +32,21 @@ RUN go test ./... -v
 
 
 #####################################################################################################
-FROM alpine:latest
-
-RUN apk --no-cache add ca-certificates
+FROM scratch
 
 WORKDIR /root/
 
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /app/server .
+
 ADD .env .
 ADD resources/default-config.json resources/
 
 # Expose port 8080 to the outside world
 EXPOSE 8080
+
+# set a non root user
+USER 5678
 
 CMD ["./server"]
