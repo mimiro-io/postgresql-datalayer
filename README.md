@@ -153,6 +153,7 @@ A complete example can be found under "resources/test/test-config.json"
   ] ,
     "postMappings": [
         {
+            "idColumn": "used to define what column is the id column in the database table (will use id from entity if not defined)",
             "datasetName": "datahub.Testdata",
             "tableName": "Testdata",
             "query": "INSERT INTO Testdata (id, foo, bar) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET foo=$2, bar=$3;",
