@@ -49,6 +49,7 @@ type PostMapping struct {
 	Query         string          `json:"query"`
 	Config        *TableConfig    `json:"config"`
 	FieldMappings []*FieldMapping `json:"fieldMappings"`
+	IdColumn      string          `json:"idColumn"`
 }
 
 type TableConfig struct {

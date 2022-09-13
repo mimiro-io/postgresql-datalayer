@@ -82,7 +82,7 @@ func (postLayer *PostLayer) PostEntities(datasetName string, entities []*Entity)
 	}
 	postLayer.logger.Debug(query)
 
-	queryDel := fmt.Sprintf(`DELETE FROM %s WHERE id = $1;`, strings.ToLower(postLayer.PostRepo.postTableDef.TableName))
+	queryDel := postLayer.CreateDeleteStatement(strings.ToLower(postLayer.PostRepo.postTableDef.TableName), strings.ToLower(postLayer.PostRepo.postTableDef.IdColumn))
 	postLayer.logger.Debug(queryDel)
 
 	fields := postLayer.PostRepo.postTableDef.FieldMappings
@@ -108,20 +108,7 @@ func (postLayer *PostLayer) PostEntities(datasetName string, entities []*Entity)
 	}
 
 	batch := &pgx.Batch{}
-
-	for _, entity := range entities {
-		s := entity.StripProps()
-		args := make([]interface{}, len(fields)+1)
-		args[0] = strings.SplitAfter(entity.ID, ":")[1]
-		for i, field := range fields {
-			args[i+1] = s[field.FieldName]
-		}
-		if !entity.IsDeleted { //If is deleted True --> Do not store
-			batch.Queue(query, args...)
-		} else { //Should be deleted if it exists
-			batch.Queue(queryDel, args[0])
-		}
-	}
+	postLayer.CreateBatch(entities, fields, batch, query, queryDel, postLayer.PostRepo.postTableDef.IdColumn)
 
 	br := postLayer.PostRepo.DB.SendBatch(context.Background(), batch)
 	_, err := br.Exec()
@@ -139,6 +126,39 @@ func (postLayer *PostLayer) PostEntities(datasetName string, entities []*Entity)
 		return err
 	}
 	return nil
+}
+
+func (postLayer *PostLayer) CreateBatch(entities []*Entity, fields []*conf.FieldMapping, batch *pgx.Batch, query string, queryDel string, idColumn string) {
+	for _, entity := range entities {
+		s := entity.StripProps()
+		args := make([]interface{}, len(fields)+1)
+		if idColumn != "" {
+			args = make([]interface{}, len(fields))
+		} else {
+			args[0] = strings.SplitAfter(entity.ID, ":")[1]
+		}
+
+		for i, field := range fields {
+			if idColumn != "" {
+				args[i] = s[field.FieldName]
+			} else {
+				args[i+1] = s[field.FieldName]
+			}
+		}
+		if !entity.IsDeleted { //If is deleted True --> Do not store
+			batch.Queue(query, args...)
+		} else { //Should be deleted if it exists
+			batch.Queue(queryDel, args[0])
+		}
+	}
+}
+
+func (PostLayer *PostLayer) CreateDeleteStatement(TableName string, IdColumn string) string {
+	if IdColumn != "" {
+		return fmt.Sprintf(`DELETE FROM %s WHERE %s = $1;`, TableName, IdColumn)
+	} else {
+		return fmt.Sprintf(`DELETE FROM %s WHERE id = $1;`, TableName)
+	}
 }
 
 func (postLayer *PostLayer) GetTableDefinition(datasetName string) *conf.PostMapping {
