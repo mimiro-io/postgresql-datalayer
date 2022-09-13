@@ -22,6 +22,7 @@
 bin/
 
 # local settings
+local/
 .local.app.config.json
 .env-local
 

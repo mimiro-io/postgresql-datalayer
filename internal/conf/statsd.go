@@ -1,18 +1,19 @@
 package conf
 
 import (
+	"context"
 	"github.com/DataDog/datadog-go/v5/statsd"
-	"github.com/spf13/viper"
+	"go.uber.org/fx"
 )
 
-func NewStatsd(env *Env) (statsd.ClientInterface, error) {
+func NewStatsd(lc fx.Lifecycle, env *Env) (statsd.ClientInterface, error) {
 	var client statsd.ClientInterface
-	agentEndpoint := viper.GetViper().GetString("DD_AGENT_HOST")
-	service := viper.GetViper().GetString("SERVICE_NAME")
+	agentEndpoint := env.AgentHost
+	service := env.ServiceName
 	if agentEndpoint != "" {
 		opt := statsd.WithNamespace(service)
-		env.Logger.Info("Statsd is configured on: ", viper.GetViper().GetString("DD_AGENT_HOST"))
-		c, err := statsd.New(viper.GetViper().GetString("DD_AGENT_HOST"), opt)
+		env.Logger.Info("Statsd is configured on: ", agentEndpoint)
+		c, err := statsd.New(agentEndpoint, opt)
 		if err != nil {
 			return nil, err
 		}
@@ -21,6 +22,13 @@ func NewStatsd(env *Env) (statsd.ClientInterface, error) {
 		env.Logger.Debug("Using NoOp statsd client")
 		client = &statsd.NoOpClient{}
 	}
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			env.Logger.Infof("Flushing statsd")
+			return client.Flush()
+		},
+	})
 
 	return client, nil
 }

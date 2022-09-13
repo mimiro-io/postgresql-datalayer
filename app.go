@@ -4,16 +4,17 @@ import (
 	"context"
 	"github.com/mimiro-io/postgresql-datalayer/internal/conf"
 	"github.com/mimiro-io/postgresql-datalayer/internal/layers"
-	"github.com/mimiro-io/postgresql-datalayer/internal/security"
 	"github.com/mimiro-io/postgresql-datalayer/internal/web"
 	"go.uber.org/fx"
+	"time"
 )
 
 func wire() *fx.App {
 	app := fx.New(
+		fx.StartTimeout(600*time.Second),
 		fx.Provide(
 			conf.NewEnv,
-			security.NewTokenProviders,
+			conf.NewTokenProviders,
 			conf.NewConfigurationManager,
 			conf.NewStatsd,
 			conf.NewLogger,

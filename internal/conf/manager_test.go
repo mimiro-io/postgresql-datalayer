@@ -2,7 +2,6 @@ package conf
 
 import (
 	"fmt"
-	"github.com/mimiro-io/postgresql-datalayer/internal/security"
 	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
@@ -28,7 +27,7 @@ func TestLoadUrl(t *testing.T) {
 
 	cmgr := ConfigurationManager{
 		logger:         zap.NewNop().Sugar(),
-		TokenProviders: security.NoOpTokenProviders(),
+		TokenProviders: NoOpTokenProviders(),
 	}
 
 	_, err := cmgr.loadUrl(fmt.Sprintf("%s/test/config.json", srv.URL))
@@ -43,12 +42,14 @@ func TestParse(t *testing.T) {
 		logger: zap.NewNop().Sugar(),
 	}
 
-	res, err := cmgr.loadFile("file://../../resources/test/test-config.json")
+	file := "file://../../resources/test/test-config.json"
+
+	res, err := cmgr.loadFile(file)
 	if err != nil {
 		t.FailNow()
 	}
 
-	config, err := cmgr.parse(res)
+	config, err := cmgr.parse(file, res)
 	if err != nil {
 		t.FailNow()
 	}
