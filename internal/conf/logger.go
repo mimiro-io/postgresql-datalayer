@@ -1,16 +1,17 @@
 package conf
 
 import (
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"strings"
 )
 
 func NewLogger(env *Env) *zap.SugaredLogger {
-	logLevel := viper.GetString("LOG_LEVEL")
+	logLevel := env.LogLevel
 	env.Logger.Infof("Resetting log level to %s", logLevel)
-	return GetLogger(env.Env, getLogLevel(logLevel), viper.GetString("SERVICE_NAME")) // reset the logger after env load
+	logger := GetLogger(env.Env, getLogLevel(logLevel), env.ServiceName) // reset the logger after env load
+	env.Logger = logger
+	return logger
 }
 
 func GetLogger(env string, level zapcore.Level, serviceName string) *zap.SugaredLogger {
@@ -27,6 +28,7 @@ func GetLogger(env string, level zapcore.Level, serviceName string) *zap.Sugared
 			OutputPaths:      []string{"stderr"},
 			ErrorOutputPaths: []string{"stderr"},
 		}
+		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		logger, _ := cfg.Build()
 		slogger = logger.Sugar()
 	default:

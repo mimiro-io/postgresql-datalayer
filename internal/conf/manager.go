@@ -4,15 +4,14 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/json"
-	"io/ioutil"
+	"github.com/robfig/cron/v3"
+	"gopkg.in/yaml.v3"
+	"io"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/mimiro-io/postgresql-datalayer/internal/security"
-
-	"github.com/bamzi/jobrunner"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
@@ -25,8 +24,9 @@ type ConfigurationManager struct {
 	Datalayer       *Datalayer
 	logger          *zap.SugaredLogger
 	State           State
-	TokenProviders  *security.TokenProviders
+	TokenProviders  *TokenProviders
 	user            user
+	cron            *cron.Cron
 }
 
 type State struct {
@@ -39,7 +39,12 @@ type user struct {
 	password string
 }
 
-func NewConfigurationManager(lc fx.Lifecycle, env *Env, providers *security.TokenProviders) *ConfigurationManager {
+type configLoader interface {
+	Load() (*Datalayer, error)
+	Digest() string
+}
+
+func NewConfigurationManager(lc fx.Lifecycle, env *Env, providers *TokenProviders) *ConfigurationManager {
 	config := &ConfigurationManager{
 		configLocation:  env.ConfigLocation,
 		refreshInterval: env.RefreshInterval,
@@ -60,6 +65,10 @@ func NewConfigurationManager(lc fx.Lifecycle, env *Env, providers *security.Toke
 			config.Init()
 			return nil
 		},
+		OnStop: func(ctx context.Context) error {
+			config.cron.Stop()
+			return nil
+		},
 	})
 	return config
 }
@@ -68,15 +77,15 @@ func (conf *ConfigurationManager) Init() {
 	conf.logger.Infof("Starting the ConfigurationManager with refresh %s\n", conf.refreshInterval)
 	conf.load()
 	conf.logger.Info("Done loading the config")
-	jobrunner.Start()
-	err := jobrunner.Schedule(conf.refreshInterval, conf)
+	conf.cron = cron.New()
+	conf.cron.Start()
+	_, err := conf.cron.AddFunc(conf.refreshInterval, func() {
+		conf.load()
+	})
 	if err != nil {
 		conf.logger.Warn("Could not start configuration reload job")
+		conf.logger.Error(err)
 	}
-}
-
-func (conf *ConfigurationManager) Run() {
-	conf.load()
 }
 
 func (conf *ConfigurationManager) load() {
@@ -112,7 +121,7 @@ func (conf *ConfigurationManager) load() {
 	}
 
 	if state.Digest != conf.State.Digest {
-		config, err := conf.parse(configContent)
+		config, err := conf.parse(conf.configLocation, configContent)
 		if err != nil {
 			conf.logger.Warn("Unable to parse json into config. Error is: "+err.Error()+". Please check file: "+conf.configLocation, err)
 			return
@@ -134,9 +143,9 @@ func (conf *ConfigurationManager) loadUrl(configEndpoint string) ([]byte, error)
 		return nil, err
 	}
 
-	provider, ok := conf.TokenProviders.Providers["auth0tokenprovider"]
+	provider, ok := conf.TokenProviders.Providers["jwttokenprovider"]
 	if ok {
-		tokenProvider := provider.(security.TokenProvider)
+		tokenProvider := provider.(TokenProvider)
 		bearer, err := tokenProvider.Token()
 		if err != nil {
 			conf.logger.Warnf("Token provider returned error: %w", err)
@@ -153,9 +162,10 @@ func (conf *ConfigurationManager) loadUrl(configEndpoint string) ([]byte, error)
 		_ = resp.Body.Close()
 	}()
 	if resp.StatusCode == 200 {
-		return ioutil.ReadAll(resp.Body)
+		return io.ReadAll(resp.Body)
 	} else {
-		conf.logger.Infof("Endpoint returned %s", resp.Status)
+		c, _ := io.ReadAll(resp.Body)
+		conf.logger.Info("Endpoint returned ", resp.Status, " content: ", string(c))
 		return nil, err
 	}
 }
@@ -179,20 +189,19 @@ func unpackContent(themBytes []byte) ([]byte, error) {
 
 func (conf *ConfigurationManager) loadFile(location string) ([]byte, error) {
 	configFileName := strings.ReplaceAll(location, "file://", "")
-
-	configFile, err := os.Open(configFileName)
-	if err != nil {
-		conf.logger.Error("Unable to open config file: "+configFileName, err)
-		return nil, err
-	}
-	defer configFile.Close()
-	return ioutil.ReadAll(configFile)
+	return os.ReadFile(configFileName)
 }
 
-func (conf *ConfigurationManager) parse(config []byte) (*Datalayer, error) {
+func (conf *ConfigurationManager) parse(location string, config []byte) (*Datalayer, error) {
 	configuration := &Datalayer{}
-	err := json.Unmarshal(config, configuration)
-	return configuration, err
+	if strings.HasSuffix(location, ".yaml") {
+		err := yaml.Unmarshal(config, configuration)
+		return configuration, err
+	} else {
+		err := json.Unmarshal(config, configuration)
+		return configuration, err
+	}
+
 }
 
 // mapColumns remaps the ColumnMapping into Column

@@ -32,22 +32,20 @@ make docker
 docker run -d -p 4343:4343 -v $(pwd)/local.config.json:/root/config.json -e PROFILE=dev -e CONFIG_LOCATION=file://config.json postgresql-datalayer
 ```
 
-## Env
+## Settings
 
-Server will by default use the .env file, AND an extra file per environment,
-for example .env-prod if PROFILE is set to "prod". This allows for pr environment
-configuration of the environment in addition to the standard ones. All variables
-declared in the .env file (but left empty) are available for reading from the ENV
-in Docker.
+By default, the service will read a configuration file from "local/settings.yaml". This is a convenience for local testing,
+but can also be used for production if wanted. You can override this location by starting the server with the config param.
 
-The server will start with a bad or missing configuration file, it has an empty
-default file under resources/ that it will load instead, and in general a call
-to a misconfigured server should just return empty results or 404's.
+```bash
+bin/server --config="/path/to/settings.yaml"
+```
 
-Every 60s (or otherwise configured) the server will look for updated config's, and
-load these if it detect changes. It should also then "fix" it's connection if changed.
+A complete example of a configuration file is provided as "example_settings.yaml" in the root directory.
 
-It supports configuration locations that either start with "file://" or "http(s)://".
+The preferred method of configuring a production server is through environment variables.
+
+All keys in the yaml file has their equivalent env key. The yaml keys are flattened, upper-cased, and snake_cased. 
 
 ```bash
 # the default server port, this will be overridden to 8080 in AWS
@@ -83,6 +81,15 @@ security features, and must NOT be set to local in AWS. It should be PROFILE=dev
 This also changes the loggers.
 
 ## Configuration
+
+The server will start with a bad or missing configuration file, it has an empty
+default file under resources/ that it will load instead, and in general a call
+to a misconfigured server should just return empty results or 404's.
+
+Every 60s (or otherwise configured) the server will look for updated config's, and
+load these if it detect changes. It should also then "fix" it's connection if changed.
+
+It supports configuration locations that either start with "file://" or "http(s)://".
 
 The service is configured with either a local json file or a remote variant of the same.
 It is strongly recommended leaving the Password and User fields empty.
