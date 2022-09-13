@@ -66,6 +66,7 @@ func NewEnv() (*Env, error) {
 		"log.level":               "INFO",
 		"service.name":            "postgresql-datalayer",
 		"config.refresh.interval": "@every 60s",
+		"config.location":         "",
 	}, "."), nil) // load defaults
 
 	// Use the POSIX compliant pflag lib instead of Go's flag lib.
@@ -86,8 +87,7 @@ func NewEnv() (*Env, error) {
 
 	if strings.HasSuffix(cFile, ".yaml") || strings.HasSuffix(cFile, ".yml") {
 		if err := k.Load(file.Provider(cFile), yaml.Parser()); err != nil { // allow starting without the file
-			logger.Info(fmt.Sprintf("File %s not loaded", cFile))
-			logger.Warn(err)
+			logger.Debug(fmt.Sprintf("File %s not loaded", cFile))
 		}
 	}
 

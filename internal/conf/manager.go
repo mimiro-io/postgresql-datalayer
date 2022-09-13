@@ -91,6 +91,11 @@ func (conf *ConfigurationManager) Init() {
 func (conf *ConfigurationManager) load() {
 	var configContent []byte
 	var err error
+	if conf.configLocation == "" {
+		conf.logger.Info("Configuration is disabled, no config file given")
+		return
+	}
+
 	if strings.Index(conf.configLocation, "file://") == 0 {
 		configContent, err = conf.loadFile(conf.configLocation)
 	} else if strings.Index(conf.configLocation, "http") == 0 {
