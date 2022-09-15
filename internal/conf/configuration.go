@@ -93,7 +93,7 @@ func (layer *Datalayer) GetUrl(mapping *PostMapping) *url.URL {
 		scheme = "postgresql"
 	}
 
-	if mapping.Config != nil {
+	if mapping != nil && mapping.Config != nil {
 		if mapping.Config.Schema != nil {
 			scheme = *mapping.Config.Schema
 		}

@@ -16,12 +16,14 @@ require (
 	github.com/juliangruber/go-intersect v1.1.0
 	github.com/knadh/koanf v1.4.3
 	github.com/labstack/echo/v4 v4.9.0
+	github.com/mimiro-io/internal-go-util v0.0.0-20220621120333-ed6ba3a9996d
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.13.0
 	github.com/testcontainers/testcontainers-go v0.13.0
 	go.uber.org/fx v1.18.1
 	go.uber.org/zap v1.23.0
+	golang.org/x/sync v0.0.0-20220907140024-f12130a52804
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -53,7 +55,6 @@ require (
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
-	github.com/mimiro-io/internal-go-util v0.0.0-20220621120333-ed6ba3a9996d // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
