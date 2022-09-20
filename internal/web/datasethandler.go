@@ -116,17 +116,22 @@ func (handler *datasetHandler) getEntities(c echo.Context) error {
 		return nil
 	})
 
-	select {
-
-	case <-ctx.Done():
-		break
-	case e, ok := <-entities:
-		if !ok {
-			break
+	group.Go(func() error {
+		for {
+			select {
+			case <-ctx.Done():
+				goto DONE
+			case e, ok := <-entities:
+				if !ok {
+					goto DONE
+				}
+				c.Response().Write([]byte(","))
+				_ = enc.Encode(e)
+			}
 		}
-		c.Response().Write([]byte(","))
-		_ = enc.Encode(e)
-	}
+	DONE: // this goto ensures that the for loop exits when there is no more data to be read
+		return nil
+	})
 
 	_ = group.Wait()
 	c.Response().Flush()

@@ -49,7 +49,7 @@ func (t *ReadTable) Query(limit int64) string {
 	}
 	query := fmt.Sprintf("select * from %s%s;", t.Name, limitQuery)
 	if t.query != "" {
-		query = fmt.Sprintf(t.query, limit)
+		query = fmt.Sprintf(t.query, limitQuery)
 	}
 
 	return query
