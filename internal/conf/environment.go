@@ -100,10 +100,6 @@ func NewEnv() (*Env, error) {
 			return key, strings.Split(v, ",")
 		}
 
-		if strings.Contains(v, " ") {
-			return key, strings.Split(v, " ")
-		}
-
 		// Otherwise, return the plain string.
 		return key, v
 	}), nil)

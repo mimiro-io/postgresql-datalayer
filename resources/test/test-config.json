@@ -11,7 +11,7 @@
     "tableMappings": [
         {
             "tableName": "Product",
-            "query": "SELECT p.product_id AS productId, p.data->'orderID' AS orderId FROM product %s;",
+            "query": "SELECT p.product_id AS productId, p.date AS date FROM product p %s;",
             "nameSpace": "product",
             "entityIdConstructor": "product/%s",
             "types": [
@@ -19,13 +19,11 @@
             ],
             "columnMappings": [
                 {
-                    "fieldName": "productId",
+                    "fieldName": "productid",
                     "isIdColumn": true
                 },
                 {
-                    "fieldName": "orderId",
-                    "isReference": true,
-                    "referenceTemplate": "http://data.test.io/newtestnamespace/order/%s"
+                    "fieldName": "date"
                 }
             ]
         },

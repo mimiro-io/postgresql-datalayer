@@ -11,6 +11,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/fx"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -86,6 +87,7 @@ func TestIntegration(t *testing.T) {
 			g.Assert(err).IsNil()
 			postgresC.Terminate(ctx)
 		})
+
 		g.It("Should accept a payload without error", func() {
 			fileBytes, err := ioutil.ReadFile("./resources/test/testdata_1.json")
 			g.Assert(err).IsNil()
@@ -177,6 +179,28 @@ func TestIntegration(t *testing.T) {
 			g.Assert(err).IsNil()
 			g.Assert(count).Equal(0)
 
+		})
+		g.It("should read changes back from table", func() {
+			fileBytes, _ := ioutil.ReadFile("./resources/test/testdata_2.json")
+			payload := strings.NewReader(string(fileBytes))
+			http.Post(layerUrl+"/entities", "application/json", payload)
+
+			res, err := http.Get(layerUrl + "/changes")
+			g.Assert(err).IsNil()
+			b, _ := io.ReadAll(res.Body)
+			//t.Log(string(b))
+			g.Assert(len(b)).Equal(1760)
+		})
+		g.It("should read entities back from table", func() {
+			fileBytes, _ := ioutil.ReadFile("./resources/test/testdata_2.json")
+			payload := strings.NewReader(string(fileBytes))
+			http.Post(layerUrl+"/entities", "application/json", payload)
+
+			res, err := http.Get(layerUrl + "/entities")
+			g.Assert(err).IsNil()
+			b, _ := io.ReadAll(res.Body)
+			//t.Log(string(b))
+			g.Assert(len(b)).Equal(1760)
 		})
 	})
 }
