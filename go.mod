@@ -5,7 +5,6 @@ go 1.19
 require (
 	github.com/DataDog/datadog-go/v5 v5.1.1
 	github.com/bcicen/jstream v1.0.1
-	github.com/docker/distribution v2.8.0+incompatible // indirect
 	github.com/docker/go-connections v0.4.0
 	github.com/franela/goblin v0.0.0-20211003143422-0a4f594942bf
 	github.com/goburrow/cache v0.1.4
@@ -36,6 +35,7 @@ require (
 	github.com/containerd/cgroups v1.0.3 // indirect
 	github.com/containerd/containerd v1.6.8 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v20.10.11+incompatible // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
