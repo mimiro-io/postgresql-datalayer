@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/DataDog/datadog-go/v5 v5.1.1
 	github.com/bcicen/jstream v1.0.1
-	github.com/docker/distribution v2.8.0+incompatible //indirect
+	github.com/docker/distribution v2.8.1+incompatible //indirect
 	github.com/docker/go-connections v0.4.0
 	github.com/franela/goblin v0.0.0-20211003143422-0a4f594942bf
 	github.com/goburrow/cache v0.1.4
