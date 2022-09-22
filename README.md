@@ -1,24 +1,29 @@
 # PostgreSQL Data Layer
 
-A Data Layer for PostgreSQL (https://www.postgresql.org/) that conforms to the Universal Data API specification (https://open.mimiro.io/specifications/uda/latest.html). This data layer can be used in conjunction with the MIMIRO data hub (https://github.com/mimiro-io/datahub) to create a modern data fabric. The PostgreSQL data layer can be configured to expose tables and views from a PostgreSQL database as a stream of changes or a current snapshot. Rows in a table are represented in JSON according the Entity Graph Data model that is described in the UDA specification. This data layer can be run as a standalone binary or as a docker container.
+A Data Layer for PostgreSQL (https://www.postgresql.org/) that conforms to the Universal Data API specification (<https://open.mimiro.io/specifications/uda/latest.html>). This data layer can be used in conjunction with the MIMIRO data hub (<https://github.com/mimiro-io/datahub>) to create a modern data fabric. The PostgreSQL data layer can be configured to expose tables and views from a PostgreSQL database as a stream of changes or a current snapshot. Rows in a table are represented in JSON according the Entity Graph Data model that is described in the UDA specification. This data layer can be run as a standalone binary or as a docker container.
 
 Releases of this data layer are published to docker hub in the repository: `mimiro/postgresql-datalayer`
 
 ## Testing
 
 You can run
+
 ```bash
 make testlocal
 ```
+
 to run the unit tests locally.
 
 ## Run
 
 Either do:
+
 ```bash
 make run
 ```
+
 or
+
 ```bash
 make build && bin/server
 ```
@@ -75,6 +80,7 @@ POSTGRES_DB_USER=
 POSTGRES_DB_PASSWORD=
 
 ```
+
 By default the PROFILE is set to local, to easier be able to run on local machines. This also disables
 security features, and must NOT be set to local in AWS. It should be PROFILE=dev or PROFILE=prod.
 
