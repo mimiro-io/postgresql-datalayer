@@ -2,13 +2,20 @@ package web
 
 import (
 	"context"
+	"embed"
+	_ "embed"
+	"encoding/json"
 	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/labstack/echo/v4"
 	"github.com/mimiro-io/postgresql-datalayer/internal/conf"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"net/http"
+	"runtime"
 )
+
+//go:embed *
+var versionDir embed.FS
 
 type Handler struct {
 	Logger       *zap.SugaredLogger
@@ -57,5 +64,14 @@ func Register(e *echo.Echo, env *conf.Env) {
 }
 
 func health(c echo.Context) error {
-	return c.String(http.StatusOK, "UP")
+	versionFile, err := versionDir.ReadFile("VERSION.json")
+	var version map[string]string
+	if err == nil {
+		json.Unmarshal(versionFile, &version)
+	} else {
+		version = map[string]string{"version": "Only available on released binaries"}
+	}
+	version["go_version"] = runtime.Version()
+
+	return c.JSON(http.StatusOK, version)
 }
