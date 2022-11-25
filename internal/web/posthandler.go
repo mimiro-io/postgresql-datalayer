@@ -41,6 +41,8 @@ func (handler *postHandler) storeEntities(c echo.Context) error {
 	datasetName, _ := url.QueryUnescape(c.Param("dataset"))
 	handler.logger.Debugf("Working on dataset %s", datasetName)
 
+	var entityContext uda.Context
+
 	dataset, err := handler.postLayer.Dataset(db.DatasetRequest{DatasetName: datasetName})
 	if err != nil {
 		handler.logger.Warn(err)
@@ -59,6 +61,8 @@ func (handler *postHandler) storeEntities(c echo.Context) error {
 		isFirst := true
 		return uda.ParseStream(body, func(value *jstream.MetaValue) error {
 			if isFirst {
+				ec := uda.AsContext(value)
+				entityContext = *ec
 				isFirst = false
 			} else {
 				e := uda.AsEntity(value)
@@ -74,7 +78,7 @@ func (handler *postHandler) storeEntities(c echo.Context) error {
 		})
 	})
 	group.Go(func() error {
-		err := dataset.Write(ctx, entities)
+		err := dataset.Write(ctx, entities, &entityContext)
 		if err != nil { // by using a stopCh for control here, we make sure that the first goroutine can detect that something has happened
 			close(stopCh)
 		}

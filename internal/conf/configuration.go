@@ -62,10 +62,11 @@ type TableConfig struct {
 }
 
 type FieldMapping struct {
-	FieldName       string `json:"fieldName" yaml:"fieldName"`
-	ToPostgresField string `json:"toPostgresField" yaml:"toPostgresField"`
-	SortOrder       int    `json:"order" yaml:"sortOrder"`
-	Type            string `json:"type" yaml:"type"`
+	FieldName        string `json:"fieldName" yaml:"fieldName"`
+	ToPostgresField  string `json:"toPostgresField" yaml:"toPostgresField"`
+	SortOrder        int    `json:"order" yaml:"sortOrder"`
+	Type             string `json:"type" yaml:"type"`
+	ResolveNamespace bool   `json:"resolveNamespace" yaml:"resolveNamespace"`
 }
 
 type VariableGetter struct {

@@ -20,7 +20,7 @@ type ReadableDataset interface {
 }
 
 type WriteableDataset interface {
-	Write(ctx context.Context, entities <-chan *uda.Entity) error
+	Write(ctx context.Context, entities <-chan *uda.Entity, entityContext *uda.Context) error
 }
 
 type PostgresDataset struct {
@@ -44,7 +44,7 @@ func NewPostgresDataset(pg *pgxpool.Pool, table *db.ReadTable, writeTable *db.Wr
 // Write takes a chan of uda.Entity and queues this in a batch request. Once the batch request has
 // batchChunkSize in entities, it attempts to commit the batch in a transaction. If the transaction
 // fails, an error is returned from the writer, and control is returned to the caller.
-func (ds *PostgresDataset) Write(ctx context.Context, entities <-chan *uda.Entity) error {
+func (ds *PostgresDataset) Write(ctx context.Context, entities <-chan *uda.Entity, entityContext *uda.Context) error {
 	defer func() {
 		ds.pg.Close() // since write creates a new pool, we should close it when done
 	}()
@@ -59,7 +59,7 @@ func (ds *PostgresDataset) Write(ctx context.Context, entities <-chan *uda.Entit
 		count++
 		chunk[count-1] = e
 		if count == batchChunkSize {
-			ds.queueAll(batch, chunk)
+			ds.queueAll(batch, chunk, entityContext)
 			err := ds.pg.BeginFunc(ctx, func(tx pgx.Tx) error {
 				batchRequest := tx.SendBatch(ctx, batch)
 				defer func() {
@@ -82,7 +82,7 @@ func (ds *PostgresDataset) Write(ctx context.Context, entities <-chan *uda.Entit
 
 	// this deals with the leftover chunk
 	if count > 0 && count < batchChunkSize {
-		ds.queueAll(batch, chunk[0:count])
+		ds.queueAll(batch, chunk[0:count], entityContext)
 		return ds.pg.BeginFunc(ctx, func(tx pgx.Tx) error {
 			batchRequest := tx.SendBatch(ctx, batch)
 			defer func() {
@@ -100,7 +100,7 @@ func (ds *PostgresDataset) Write(ctx context.Context, entities <-chan *uda.Entit
 }
 
 // queueAll takes a list if entities, and queues the in the pgx.Batch
-func (ds *PostgresDataset) queueAll(batch *pgx.Batch, entities []*uda.Entity) {
+func (ds *PostgresDataset) queueAll(batch *pgx.Batch, entities []*uda.Entity, entityContext *uda.Context) {
 	for _, entity := range entities {
 		props := entity.StripPrefixes()
 		args := make([]any, len(ds.writeTable.Fields)+1)
@@ -111,10 +111,15 @@ func (ds *PostgresDataset) queueAll(batch *pgx.Batch, entities []*uda.Entity) {
 		}
 
 		for i, field := range ds.writeTable.Fields {
+			value := props[field.FieldName]
+			if field.ResolveNamespace {
+				value = uda.ToURI(entityContext, props[field.FieldName].(string))
+			}
+
 			if ds.writeTable.IdColumn != "" {
-				args[i] = props[field.FieldName]
+				args[i] = value
 			} else {
-				args[i+1] = props[field.FieldName]
+				args[i+1] = value
 			}
 		}
 
