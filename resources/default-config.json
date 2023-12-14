@@ -43,44 +43,48 @@
             "TableName" : "Address",
             "EntityIdConstructor" : "addresses/%s",
             "Types" : [ "http://data.test.io/sales/Address" ],
-            "ColumnMappings" : {
-                "AddressId" : {
-                    "IsIdColumn" : true
+            "columnMappings": [
+                {
+                    "fieldName": "orderId",
+                    "isIdColumn": true
                 }
-            }
+            ]
         },
         {
             "TableName" : "Product",
             "EntityIdConstructor" : "products/%s",
             "Types" : [ "http://data.test.io/sales/Product" ],
-            "ColumnMappings" : {
-                "ProductId" : {
-                    "IsIdColumn" : true
+            "config" : {
+                "user": {
+                    "type": "direct",
+                    "key": "[USERNAME]"
                 },
-                "ProductCategoryID" : {
-                    "IsReference" : true,
-                    "ReferenceTemplate" : "http://data.test.io/sales/categories/%s"
+                "password": {
+                    "type": "direct",
+                    "key": "[PASSWORD]"
                 }
-            }
+            },
+            "columnMappings": [
+                {
+                    "fieldName": "orderId",
+                    "isIdColumn": true
+                }
+            ]
         },
         {
             "TableName" : "Customer",
             "EntityIdConstructor" : "customers/%s",
             "Types" : [ "http://data.test.io/sales/Customer" ],
-            "ColumnMappings" : {
-                "CustomerId" : {
-                    "IsIdColumn" : true
+            "columnMappings": [
+                {
+                    "fieldName": "orderId",
+                    "isIdColumn": true
                 },
-                "PasswordHash" : {
-                    "IgnoreColumn" : true
-                },
-                "PasswordSalt" : {
-                    "IgnoreColumn" : true
-                },
-                "SalesPerson" : {
-                    "PropertyName" : "SalesPersonName"
+                {
+                    "fieldName": "PasswordHash",
+                    "ignoreColumn": true
                 }
-            }
+            ]
         }
     ],
     "type": "content"

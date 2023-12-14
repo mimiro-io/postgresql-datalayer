@@ -77,7 +77,7 @@ func NewEnv() (*Env, error) {
 	}
 
 	// Path to one or more config files to load into koanf along with some config params.
-	f.String("conf", "local/settings.yaml", "path to the .yaml config file")
+	f.String("conf", "example_settings.yaml", "path to the .yaml config file")
 	_ = f.Parse(os.Args[1:])
 
 	cFile, err := f.GetString("conf")

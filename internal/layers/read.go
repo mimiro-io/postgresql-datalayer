@@ -2,7 +2,6 @@ package layers
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgproto3/v2"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -10,7 +9,6 @@ import (
 	"github.com/mimiro-io/postgresql-datalayer/internal/db"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
-	"net/url"
 )
 
 type Layer struct {
@@ -39,7 +37,7 @@ func NewLayer(lc fx.Lifecycle, cmgr *conf.ConfigurationManager, env *conf.Env) *
 	layer.Repo = &Repository{
 		ctx: context.Background(),
 	}
-	_ = layer.ensureConnection() // ok with error here
+	_ = layer.ensureConnection("") // ok with error here
 
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
@@ -107,7 +105,7 @@ func (l *Layer) DoesDatasetExist(datasetName string) bool {
 }
 
 func (l *Layer) Dataset(request db.DatasetRequest) (ReadableDataset, error) {
-	err := l.ensureConnection()
+	err := l.ensureConnection(request.DatasetName)
 	if err != nil {
 		return nil, err
 	}
@@ -136,14 +134,14 @@ func (l *Layer) er(err error) {
 	l.logger.Warnf("Got error %s", err)
 }
 
-func (l *Layer) ensureConnection() error {
+func (l *Layer) ensureConnection(dataset string) error {
 	l.logger.Debug("Ensuring connection")
 	if l.cmgr.State.Digest != l.Repo.digest {
 		l.logger.Debug("Configuration has changed need to reset connection")
 		if l.Repo.DB != nil {
 			l.Repo.DB.Close() // don't really care about the error, as long as it is closed
 		}
-		db, err := l.connect() // errors are already logged
+		db, err := l.connect(dataset) // errors are already logged
 		if err != nil {
 			return err
 		}
@@ -153,15 +151,15 @@ func (l *Layer) ensureConnection() error {
 	return nil
 }
 
-func (l *Layer) connect() (*pgxpool.Pool, error) {
-
-	u := &url.URL{
-		Scheme: "postgresql",
-		User:   url.UserPassword(l.cmgr.Datalayer.User, l.cmgr.Datalayer.Password),
-		Host:   fmt.Sprintf("%s:%s", l.cmgr.Datalayer.DatabaseServer, l.cmgr.Datalayer.Port),
-		Path:   l.cmgr.Datalayer.Database,
+func (l *Layer) connect(dataset string) (*pgxpool.Pool, error) {
+	var tableMap = l.Repo.tableDef
+	for _, table := range l.cmgr.Datalayer.TableMappings {
+		if table.TableName == dataset {
+			tableMap = table
+			break
+		}
 	}
-
+	u := l.cmgr.Datalayer.GetUrl(nil, tableMap)
 	conn, err := pgxpool.Connect(context.Background(), u.String())
 	if err != nil {
 		l.logger.Warn("Error creating connection pool: ", err.Error())
