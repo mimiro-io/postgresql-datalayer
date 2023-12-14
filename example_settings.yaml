@@ -21,7 +21,7 @@ token:
 
 
 config:
-  location: file://resources/test/test-config.json
+  location: file://resources/default-config.json
   refresh:
     interval: "@every 60s"
 

@@ -53,7 +53,7 @@ func (postLayer *PostLayer) connect(layer *conf.Datalayer, name db.DatasetName) 
 		}
 	}
 
-	u := postLayer.cmgr.Datalayer.GetUrl(tableMap)
+	u := postLayer.cmgr.Datalayer.GetUrl(tableMap, nil)
 
 	conn, err := pgxpool.Connect(context.Background(), u.String())
 	if err != nil {

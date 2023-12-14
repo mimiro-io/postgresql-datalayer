@@ -28,6 +28,7 @@ type TableMapping struct {
 	EntityIdConstructor string           `json:"entityIdConstructor" yaml:"entityIdConstructor"`
 	Types               []string         `json:"types" yaml:"types"`
 	ColumnMappings      []*ColumnMapping `json:"columnMappings" yaml:"columnMappings"`
+	Config              *TableConfig     `json:"config" yaml:"config"`
 	Columns             map[string]*ColumnMapping
 }
 
@@ -83,44 +84,83 @@ func (v *VariableGetter) GetValue() string {
 	}
 }
 
-func (layer *Datalayer) GetUrl(mapping *PostMapping) *url.URL {
-	database := layer.Database
-	port := layer.Port
-	server := layer.DatabaseServer
-	user := layer.User
-	password := layer.Password
-	scheme := layer.Schema
-	if scheme == "" {
-		scheme = "postgresql"
-	}
+func (layer *Datalayer) GetUrl(postMapping *PostMapping, tableMapping *TableMapping) *url.URL {
+	u := &url.URL{}
+	if postMapping != nil {
+		database := layer.Database
+		port := layer.Port
+		server := layer.DatabaseServer
+		user := layer.User
+		password := layer.Password
+		scheme := layer.Schema
+		if scheme == "" {
+			scheme = "postgresql"
+		}
 
-	if mapping != nil && mapping.Config != nil {
-		if mapping.Config.Schema != nil {
-			scheme = *mapping.Config.Schema
+		if postMapping != nil && postMapping.Config != nil {
+			if postMapping.Config.Schema != nil {
+				scheme = *postMapping.Config.Schema
+			}
+			if postMapping.Config.Database != nil {
+				database = *postMapping.Config.Database
+			}
+			if postMapping.Config.Port != nil {
+				port = *postMapping.Config.Port
+			}
+			if postMapping.Config.DatabaseServer != nil {
+				server = *postMapping.Config.DatabaseServer
+			}
+			if postMapping.Config.User != nil {
+				user = postMapping.Config.User.GetValue()
+			}
+			if postMapping.Config.Password != nil {
+				password = postMapping.Config.Password.GetValue()
+			}
 		}
-		if mapping.Config.Database != nil {
-			database = *mapping.Config.Database
+
+		u = &url.URL{
+			Scheme: scheme,
+			User:   url.UserPassword(user, password),
+			Host:   fmt.Sprintf("%s:%s", server, port),
+			Path:   database,
 		}
-		if mapping.Config.Port != nil {
-			port = *mapping.Config.Port
+	} else if tableMapping != nil {
+		database := layer.Database
+		port := layer.Port
+		server := layer.DatabaseServer
+		user := layer.User
+		password := layer.Password
+		scheme := layer.Schema
+		if scheme == "" {
+			scheme = "postgresql"
 		}
-		if mapping.Config.DatabaseServer != nil {
-			server = *mapping.Config.DatabaseServer
+
+		if tableMapping != nil && tableMapping.Config != nil {
+			if tableMapping.Config.Schema != nil {
+				scheme = *tableMapping.Config.Schema
+			}
+			if tableMapping.Config.Database != nil {
+				database = *tableMapping.Config.Database
+			}
+			if tableMapping.Config.Port != nil {
+				port = *tableMapping.Config.Port
+			}
+			if tableMapping.Config.DatabaseServer != nil {
+				server = *tableMapping.Config.DatabaseServer
+			}
+			if tableMapping.Config.User != nil {
+				user = tableMapping.Config.User.GetValue()
+			}
+			if tableMapping.Config.Password != nil {
+				password = tableMapping.Config.Password.GetValue()
+			}
 		}
-		if mapping.Config.User != nil {
-			user = mapping.Config.User.GetValue()
-		}
-		if mapping.Config.Password != nil {
-			password = mapping.Config.Password.GetValue()
+		u = &url.URL{
+			Scheme: scheme,
+			User:   url.UserPassword(user, password),
+			Host:   fmt.Sprintf("%s:%s", server, port),
+			Path:   database,
 		}
 	}
-
-	u := &url.URL{
-		Scheme: scheme,
-		User:   url.UserPassword(user, password),
-		Host:   fmt.Sprintf("%s:%s", server, port),
-		Path:   database,
-	}
-
 	return u
 }
