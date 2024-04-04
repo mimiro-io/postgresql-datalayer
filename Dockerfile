@@ -1,4 +1,4 @@
-FROM golang:1.19.1-alpine3.16 as builder
+FROM golang:1.22.2-alpine3.19 as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
