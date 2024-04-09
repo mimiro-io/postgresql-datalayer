@@ -97,7 +97,7 @@ func (layer *Datalayer) GetUrl(postMapping *PostMapping, tableMapping *TableMapp
 			scheme = "postgresql"
 		}
 
-		if postMapping != nil && postMapping.Config != nil {
+		if postMapping.Config != nil {
 			if postMapping.Config.Schema != nil {
 				scheme = *postMapping.Config.Schema
 			}
@@ -135,7 +135,7 @@ func (layer *Datalayer) GetUrl(postMapping *PostMapping, tableMapping *TableMapp
 			scheme = "postgresql"
 		}
 
-		if tableMapping != nil && tableMapping.Config != nil {
+		if tableMapping.Config != nil {
 			if tableMapping.Config.Schema != nil {
 				scheme = *tableMapping.Config.Schema
 			}
