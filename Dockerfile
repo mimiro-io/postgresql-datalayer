@@ -1,4 +1,4 @@
-FROM golang:1.22.2-alpine3.19 as builder
+FROM golang:1.22.2-alpine3.19 AS builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -15,7 +15,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 #####################################################################################################
-FROM builder as build
+FROM builder AS build
 
 # Copy the source from the current directory to the Working Directory inside the container
 COPY cmd ./cmd 
