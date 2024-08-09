@@ -1,6 +1,6 @@
 module github.com/mimiro-io/postgresql-datalayer
 
-go 1.22.2
+go 1.22.6
 
 require (
 	github.com/DataDog/datadog-go/v5 v5.1.1
