@@ -7,8 +7,8 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/mimiro-io/internal-go-util/pkg/uda"
-	"github.com/mimiro-io/postgresql-datalayer/internal/conf"
-	"github.com/mimiro-io/postgresql-datalayer/internal/db"
+	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/conf"
+	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/db"
 	"strings"
 )
 

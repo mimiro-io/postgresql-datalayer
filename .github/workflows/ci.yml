@@ -8,6 +8,20 @@ on:
     types:
       - published
 jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: make build
+
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: make test
+
   DockerHub:
     uses: mimiro-io/.github/.github/workflows/dockerhub.yaml@main
     with:
