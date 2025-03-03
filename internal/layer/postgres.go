@@ -31,7 +31,7 @@ func newPgsqlDB(conf *common.Config) (*pgsqlDB, error) {
 	// config, cerr := pgx.ParseConfig("postgres://user:pass@localhost:5432/dbname?sslmode=disable")
 	config, cerr := pgx.ParseConfig(connStr)
 	if cerr != nil {
-		return nil, ErrConnection(err)
+		return nil, ErrConnection(cerr)
 	}
 
 	// Create a driver.Connector from the pgx config.
