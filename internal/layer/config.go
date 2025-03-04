@@ -39,6 +39,12 @@ func newPgsqlConf(config *cdl.Config) (*PgsqlConf, cdl.LayerError) {
 }
 
 func (dl *PgsqlDatalayer) UpdateConfiguration(config *cdl.Config) cdl.LayerError {
+	// close connection and create new one
+	err := dl.db.db.Close()
+	if err != nil {
+		return cdl.Err(fmt.Errorf("could not close database connection because %s", err.Error()), cdl.LayerErrorInternal)
+	}
+
 	// update database connection
 	dl.db, _ = newPgsqlDB(config)
 

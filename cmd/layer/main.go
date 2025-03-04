@@ -13,10 +13,5 @@ func main() {
 		configFolderLocation = args[0]
 	}
 
-	pathFromEnv := os.Getenv("CONFIG_LOCATION")
-	if pathFromEnv != "" {
-		configFolderLocation = pathFromEnv
-	}
-
 	common.NewServiceRunner(pgl.NewPgsqlDataLayer).WithConfigLocation(configFolderLocation).WithEnrichConfig(pgl.EnrichConfig).StartAndWait()
 }

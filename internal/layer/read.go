@@ -75,7 +75,7 @@ func (d *Dataset) newIterator(mapper *cdl.Mapper, since string, limit int) (*dbI
 
 		err = rows.Scan(&maxSince)
 		if err != nil {
-			d.logger.Error("failed to scan max since", "error", err)
+			d.logger.Error("failed to scan max since. ensure column is a DateTime field.", "error", err)
 			return nil, ErrQuery(err)
 		}
 

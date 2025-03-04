@@ -58,7 +58,7 @@ func (dl *PgsqlDatalayer) DatasetDescriptions() []*common.DatasetDescription {
 }
 
 func NewPgsqlDataLayer(conf *common.Config, logger common.Logger, metrics common.Metrics) (common.DataLayerService, error) {
-	oracledb, err := newPgsqlDB(conf)
+	pgsqldb, err := newPgsqlDB(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func NewPgsqlDataLayer(conf *common.Config, logger common.Logger, metrics common
 		logger:   logger,
 		metrics:  metrics,
 		config:   conf,
-		db:       oracledb,
+		db:       pgsqldb,
 	}
 	err = l.UpdateConfiguration(conf)
 	if err != nil {

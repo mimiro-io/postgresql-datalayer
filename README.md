@@ -16,9 +16,9 @@ make test
 
 ## Run
 
-Ensure a config file exists in the location configured in the CONFIG_LOCATION variable
-
 For legacy:
+
+Ensure a config file exists in the location configured in the CONFIG_LOCATION variable
 
 ```bash
 make docker
@@ -27,9 +27,11 @@ docker run -d -p 4343:4343 -v $(pwd)/local.config.json:/root/config.json -e PROF
 
 For common config (recommended):
 
+Ensure a config file exists in the location configured in the DATALAYER_CONFIG_PATH variable
+
 ```bash
 make docker
-docker run -p 4343:4343 -v $(pwd)/resources/layer/config.json:/root/config/config.json -e CONFIG_LOCATION=/root/config postgresql-datalayer /root/pgsql-layer
+docker run -p 4343:4343 -v $(pwd)/resources/layer/config.json:/root/config/config.json -e DATALAYER_CONFIG_PATH=/root/config postgresql-datalayer /root/pgsql-layer
 ```
 
 ## Configuration
