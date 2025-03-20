@@ -9,16 +9,14 @@ import (
 )
 
 func TestLoadFile(t *testing.T) {
-
 	cmgr := ConfigurationManager{
 		logger: zap.NewNop().Sugar(),
 	}
 
-	_, err := cmgr.loadFile("file://../../resources/test/test-config.json")
+	_, err := cmgr.loadFile("file://../../../resources/test/test-config.json")
 	if err != nil {
 		t.FailNow()
 	}
-
 }
 
 func TestLoadUrl(t *testing.T) {
@@ -42,7 +40,7 @@ func TestParse(t *testing.T) {
 		logger: zap.NewNop().Sugar(),
 	}
 
-	file := "file://../../resources/test/test-config.json"
+	file := "file://../../../resources/test/test-config.json"
 
 	res, err := cmgr.loadFile(file)
 	if err != nil {
@@ -56,7 +54,6 @@ func TestParse(t *testing.T) {
 	if config.Database != "psql_test" {
 		t.Errorf("%s != psql_test", config.Database)
 	}
-
 }
 
 func serverMock() *httptest.Server {

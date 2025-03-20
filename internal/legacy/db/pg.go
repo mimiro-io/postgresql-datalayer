@@ -3,7 +3,7 @@ package db
 import (
 	"errors"
 	"fmt"
-	"github.com/mimiro-io/postgresql-datalayer/internal/conf"
+	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/conf"
 	"sort"
 )
 

@@ -1,0 +1,78 @@
+{
+    "layer_config": {
+        "port": "17777",
+        "service_name": "pgsql_service",
+        "log_level": "DEBUG",
+        "log_format": "json",
+        "config_refresh_interval": "200s"
+    },
+    "system_config": {
+        "user" : "postgres",
+        "password" : "postgres",
+        "database" : "psql_test",
+        "host" : "localhost",
+        "port" : "5432"
+    },
+    "dataset_definitions": [
+        {
+            "name": "products",
+            "source_config": {
+                "table_name" : "Product",
+                "since_column" : "Timestamp",
+                "flush_threshold": 5
+            },
+            "incoming_mapping_config": {
+                "base_uri": "http://data.test.io/newtestnamespace/product/",
+                "property_mappings": [
+                    {
+                        "property": "id",
+                        "is_identity": true,
+                        "strip_ref_prefix": true
+                    },
+                    {
+                        "entity_property": "Product_Id",
+                        "property": "product_id"
+                    },
+                    {
+                        "entity_property": "ProductPrice",
+                        "property": "productprice"
+                    },
+                    {
+                        "entity_property": "Date",
+                        "property": "date"
+                    },
+                    {
+                        "entity_property": "Reporter",
+                        "property": "reporter"
+                    },
+                    {
+                        "entity_property": "Version",
+                        "property": "version"
+                    }
+                ]
+            },
+            "outgoing_mapping_config": {
+                "base_uri": "http://data.sample.org/",
+                "property_mappings": [
+                    {
+                        "property": "id",
+                        "is_identity": true,
+                        "uri_value_pattern": "http://data.sample.org/things/{value}"
+                    },
+                    {
+                        "entity_property": "product_id",
+                        "property": "product_id"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "customers",
+            "source_config": {
+                "table_name" : "Customer",
+                "since_column" : "last_modified",
+                "entity_column" : "entity"
+            }
+        }
+    ]
+}

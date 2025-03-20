@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/labstack/echo/v4"
-	"github.com/mimiro-io/postgresql-datalayer/internal/conf"
+	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/conf"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"net/http"

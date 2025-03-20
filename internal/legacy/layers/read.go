@@ -5,14 +5,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgproto3/v2"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/mimiro-io/postgresql-datalayer/internal/conf"
-	"github.com/mimiro-io/postgresql-datalayer/internal/db"
+	conf2 "github.com/mimiro-io/postgresql-datalayer/internal/legacy/conf"
+	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/db"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
 type Layer struct {
-	cmgr   *conf.ConfigurationManager
+	cmgr   *conf2.ConfigurationManager
 	logger *zap.SugaredLogger
 	Repo   *Repository //exported because it needs to deferred from main
 }
@@ -20,7 +20,7 @@ type Layer struct {
 type Repository struct {
 	DB       *pgxpool.Pool
 	ctx      context.Context
-	tableDef *conf.TableMapping
+	tableDef *conf2.TableMapping
 	digest   [16]byte
 }
 
@@ -30,7 +30,7 @@ type DatasetRequest struct {
 	Limit       int64
 }
 
-func NewLayer(lc fx.Lifecycle, cmgr *conf.ConfigurationManager, env *conf.Env) *Layer {
+func NewLayer(lc fx.Lifecycle, cmgr *conf2.ConfigurationManager, env *conf2.Env) *Layer {
 	layer := &Layer{}
 	layer.cmgr = cmgr
 	layer.logger = env.Logger.Named("layer")
@@ -66,7 +66,7 @@ func (l *Layer) GetDatasetNames() []string {
 	return names
 }
 
-func (l *Layer) GetTableDefinition(datasetName string) *conf.TableMapping {
+func (l *Layer) GetTableDefinition(datasetName string) *conf2.TableMapping {
 	for _, table := range l.cmgr.Datalayer.TableMappings {
 		if table.TableName == datasetName {
 			return table
@@ -170,8 +170,8 @@ func (l *Layer) connect(dataset string) (*pgxpool.Pool, error) {
 }
 
 // mapColumns remaps the ColumnMapping into Column
-func mapColumns(columns []*conf.ColumnMapping) map[string]*conf.ColumnMapping {
-	cms := make(map[string]*conf.ColumnMapping)
+func mapColumns(columns []*conf2.ColumnMapping) map[string]*conf2.ColumnMapping {
+	cms := make(map[string]*conf2.ColumnMapping)
 
 	for _, cm := range columns {
 		cms[cm.FieldName] = cm

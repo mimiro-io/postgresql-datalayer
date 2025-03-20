@@ -2,11 +2,11 @@ package web
 
 import (
 	"context"
+	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/conf"
 	"strings"
 
 	"github.com/labstack/echo/v4"
-	"github.com/mimiro-io/postgresql-datalayer/internal/conf"
-	"github.com/mimiro-io/postgresql-datalayer/internal/web/middlewares"
+	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/web/middlewares"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )

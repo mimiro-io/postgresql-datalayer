@@ -3,25 +3,25 @@ package layers
 import (
 	"context"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/mimiro-io/postgresql-datalayer/internal/conf"
-	"github.com/mimiro-io/postgresql-datalayer/internal/db"
+	conf2 "github.com/mimiro-io/postgresql-datalayer/internal/legacy/conf"
+	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/db"
 	"go.uber.org/zap"
 )
 
 type PostLayer struct {
 	logger   *zap.SugaredLogger
-	cmgr     *conf.ConfigurationManager
+	cmgr     *conf2.ConfigurationManager
 	PostRepo *PostRepository //exported because it needs to deferred from main??
 }
 
 type PostRepository struct {
 	DB           *pgxpool.Pool
 	ctx          context.Context
-	postTableDef *conf.PostMapping
+	postTableDef *conf2.PostMapping
 	digest       [16]byte
 }
 
-func NewPostLayer(cmgr *conf.ConfigurationManager, logger *zap.SugaredLogger) *PostLayer {
+func NewPostLayer(cmgr *conf2.ConfigurationManager, logger *zap.SugaredLogger) *PostLayer {
 	layer := &PostLayer{
 		cmgr:   cmgr,
 		logger: logger.Named("layer"),
@@ -42,8 +42,8 @@ func (postLayer *PostLayer) Dataset(request db.DatasetRequest) (WriteableDataset
 	return NewPostgresDataset(pg, nil, table, request), nil
 }
 
-func (postLayer *PostLayer) connect(layer *conf.Datalayer, name db.DatasetName) (*pgxpool.Pool, error) {
-	var tableMap *conf.PostMapping
+func (postLayer *PostLayer) connect(layer *conf2.Datalayer, name db.DatasetName) (*pgxpool.Pool, error) {
+	var tableMap *conf2.PostMapping
 	for _, table := range layer.PostMappings {
 		if table.DatasetName == string(name) {
 			tableMap = table

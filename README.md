@@ -4,40 +4,171 @@ A Data Layer for PostgreSQL (https://www.postgresql.org/) that conforms to the U
 
 Releases of this data layer are published to docker hub in the repository: `mimiro/postgresql-datalayer`
 
+This layer supports both common configuration and the legacy configuration structure. It is recommended that any new deployments use the common config version.
+
 ## Testing
 
-You can run
+To test run:
 
 ```bash
-make testlocal
+make test
 ```
-
-to run the unit tests locally.
 
 ## Run
 
-Either do:
-
-```bash
-make run
-```
-
-or
-
-```bash
-make build && bin/server
-```
+For legacy:
 
 Ensure a config file exists in the location configured in the CONFIG_LOCATION variable
-
-With Docker
 
 ```bash
 make docker
 docker run -d -p 4343:4343 -v $(pwd)/local.config.json:/root/config.json -e PROFILE=dev -e CONFIG_LOCATION=file://config.json postgresql-datalayer
 ```
 
-## Settings
+For common config (recommended):
+
+Ensure a config file exists in the location configured in the DATALAYER_CONFIG_PATH variable
+
+```bash
+make docker
+docker run -p 4343:4343 -v $(pwd)/resources/layer/config.json:/root/config/config.json -e DATALAYER_CONFIG_PATH=/root/config postgresql-datalayer /root/pgsql-layer
+```
+
+## Configuration
+
+The service configuration is as follows:
+
+```json5
+{
+    "layer_config": {
+        "port": "17777",
+        "service_name": "pgsql_service",
+        "log_level": "DEBUG",
+        "log_format": "json",
+        "config_refresh_interval": "200s"
+    },
+    "system_config": {
+        "user": "postgres",
+        "password": "postgres",
+        "database": "psql_test",
+        "host": "localhost",
+        "port": "5432"
+    },
+    "dataset_definitions": []
+}
+```
+
+Dataset definitions are as follows:
+
+```json5
+{
+    "name": "products",
+    "source_config": {
+        "table_name": "The name of the table to be exposed or written to",
+        "since_column": "Optional. The name of the column to use to detect changes MUST be of type DateTime in the database",
+        "flush_threshold": "int value with number of entities to update in a batch. recommended is 100 - 1000 depending on number of columns.",
+        "entity_column" : "If the data being mapped contains a JSONB column that contains compliant entity graph data model entity it can be used by naming the column here. When doing so, incoming and outgoing mapped config MUST be omitted."
+    },
+    "incoming_mapping_config": {},
+    "outgoing_mapping_config": {}
+}
+```
+Please refer to the common config docs for incoming and outgoing config mappings.
+
+Here is a complete config example:
+
+```json5
+{
+    "layer_config": {
+        "port": "17777",
+        "service_name": "pgsql_service",
+        "log_level": "DEBUG",
+        "log_format": "json",
+        "config_refresh_interval": "200s"
+    },
+    "system_config": {
+        "user" : "postgres",
+        "password" : "postgres",
+        "database" : "psql_test",
+        "host" : "localhost",
+        "port" : "5432"
+    },
+    "dataset_definitions": [
+        {
+            "name": "products",
+            "source_config": {
+                "table_name" : "Product",
+                "since_column" : "Timestamp",
+                "flush_threshold": 5
+            },
+            "incoming_mapping_config": {
+                "base_uri": "http://data.test.io/newtestnamespace/product/",
+                "property_mappings": [
+                    {
+                        "property": "id",
+                        "is_identity": true,
+                        "strip_ref_prefix": true
+                    },
+                    {
+                        "entity_property": "Product_Id",
+                        "property": "product_id"
+                    },
+                    {
+                        "entity_property": "ProductPrice",
+                        "property": "productprice"
+                    },
+                    {
+                        "entity_property": "Date",
+                        "property": "date"
+                    },
+                    {
+                        "entity_property": "Reporter",
+                        "property": "reporter"
+                    },
+                    {
+                        "entity_property": "Version",
+                        "property": "version"
+                    }
+                ]
+            },
+            "outgoing_mapping_config": {
+                "base_uri": "http://data.sample.org/",
+                "property_mappings": [
+                    {
+                        "property": "id",
+                        "is_identity": true,
+                        "uri_value_pattern": "http://data.sample.org/things/{value}"
+                    },
+                    {
+                        "entity_property": "product_id",
+                        "property": "product_id"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "customers",
+            "source_config": {
+                "table_name" : "Customer",
+                "since_column" : "last_modified",
+                "entity_column" : "entity"
+            }
+        }
+    ]
+}
+```
+
+Environment variables overrides for connection to Postgresql instance:
+
+```bash
+PGSQL_USER      # username
+PGSQL_PASSWORD  # password
+PGSQL_DATABASE  # database name
+PGSQL_HOST      # database server
+PGSQL_PORT      # port of database
+```
+
+## Legacy Configuration
 
 By default, the service will read a configuration file from "local/settings.yaml". This is a convenience for local testing,
 but can also be used for production if wanted. You can override this location by starting the server with the config param.
@@ -50,7 +181,7 @@ A complete example of a configuration file is provided as "example_settings.yaml
 
 The preferred method of configuring a production server is through environment variables.
 
-All keys in the yaml file has their equivalent env key. The yaml keys are flattened, upper-cased, and snake_cased. 
+All keys in the yaml file has their equivalent env key. The yaml keys are flattened, upper-cased, and snake_cased.
 
 ```bash
 # the default server port, this will be overridden to 8080 in AWS
