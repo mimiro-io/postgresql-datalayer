@@ -67,6 +67,59 @@
             }
         },
         {
+            "name": "products2",
+            "source_config": {
+                "flush_threshold": 5,
+                "since_column" : "Timestamp",
+                "since_table" : "Product",
+                "data_query" : "SELECT * from Product"
+            },
+            "incoming_mapping_config": {
+                "base_uri": "http://data.test.io/newtestnamespace/product2/",
+                "property_mappings": [
+                    {
+                        "property": "id",
+                        "is_identity": true,
+                        "strip_ref_prefix": true
+                    },
+                    {
+                        "entity_property": "Product_Id",
+                        "property": "product_id"
+                    },
+                    {
+                        "entity_property": "ProductPrice",
+                        "property": "productprice"
+                    },
+                    {
+                        "entity_property": "Date",
+                        "property": "date"
+                    },
+                    {
+                        "entity_property": "Reporter",
+                        "property": "reporter"
+                    },
+                    {
+                        "entity_property": "Version",
+                        "property": "version"
+                    }
+                ]
+            },
+            "outgoing_mapping_config": {
+                "base_uri": "http://data.sample.org/",
+                "property_mappings": [
+                    {
+                        "property": "id",
+                        "is_identity": true,
+                        "uri_value_pattern": "http://data.sample.org/things/{value}"
+                    },
+                    {
+                        "entity_property": "product_id",
+                        "property": "product_id"
+                    }
+                ]
+            }
+        },
+        {
             "name": "customers",
             "source_config": {
                 "table_name" : "Customer",

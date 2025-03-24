@@ -56,9 +56,16 @@ func (d *Dataset) newIterator(mapper *cdl.Mapper, since string, limit int) (*dbI
 
 	var maxSince sql.NullTime
 	var nextToken string
+
 	if sinceCol != "" {
+		// since table
+		sinceTable := getConfigProperty(d.datasetDefinition.SourceConfig, SinceTable)
+		if sinceTable == "" {
+			sinceTable = d.datasetDefinition.SourceConfig[TableName].(string)
+		}
+
 		// build max since query
-		maxSinceQuery := "SELECT MAX(" + sinceCol + ") AS \"_MAX_SINCE\" FROM " + d.datasetDefinition.SourceConfig[TableName].(string)
+		maxSinceQuery := "SELECT MAX(" + sinceCol + ") AS \"_MAX_SINCE\" FROM " + sinceTable
 		rows, err := db.QueryContext(ctx, maxSinceQuery)
 		if err != nil {
 			return nil, cdl.Err(err, cdl.LayerErrorInternal)
@@ -167,7 +174,9 @@ func (d *Dataset) newIterator(mapper *cdl.Mapper, since string, limit int) (*dbI
 
 func buildQuery(definition *cdl.DatasetDefinition, since string, maxSince string, limit int) (string, error) {
 	entityColumn := getConfigProperty(definition.SourceConfig, EntityColumn)
-	sinceCol := getConfigProperty(definition.SourceConfig, SinceColumn)
+	sinceColumn := getConfigProperty(definition.SourceConfig, SinceColumn)
+	sinceTable := getConfigProperty(definition.SourceConfig, SinceTable)
+	dataQuery := getConfigProperty(definition.SourceConfig, DataQuery)
 	cols := "*"
 	if definition.OutgoingMappingConfig == nil {
 		if entityColumn != "" {
@@ -186,21 +195,50 @@ func buildQuery(definition *cdl.DatasetDefinition, since string, maxSince string
 			}
 		}
 	}
-	q := "SELECT " + cols + " FROM " + definition.SourceConfig[TableName].(string)
 
-	if sinceCol != "" {
-		if since != "" {
-			sinceValStr, err := base64.URLEncoding.DecodeString(since)
-			if err != nil {
-				return "", err
+	var q string
+	if dataQuery != "" {
+		q = dataQuery
+	} else {
+		q = "SELECT " + cols + " FROM " + definition.SourceConfig[TableName].(string)
+	}
+
+	if maxSince != "" {
+		if sinceTable != "" {
+			connectTerm := " AND "
+			if !strings.Contains(q, "WHERE") {
+				connectTerm = " WHERE "
 			}
 
-			q += fmt.Sprintf(" WHERE %s.%s > '%s' AND %s.%s <= '%s'",
-				definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], sinceValStr,
-				definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], maxSince)
-		} else {
-			q += fmt.Sprintf(" WHERE %s.%s <= '%s'",
-				definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], maxSince)
+			if since != "" {
+				sinceValStr, err := base64.URLEncoding.DecodeString(since)
+				if err != nil {
+					return "", err
+				}
+
+				term := connectTerm + " %s.%s > '%s' AND %s.%s <= '%s'"
+				q += fmt.Sprintf(term,
+					sinceTable, sinceColumn, sinceValStr,
+					sinceTable, sinceColumn, maxSince)
+			} else {
+				term := connectTerm + " %s.%s <= '%s'"
+				q += fmt.Sprintf(term,
+					sinceTable, sinceColumn, maxSince)
+			}
+		} else if sinceColumn != "" {
+			if since != "" {
+				sinceValStr, err := base64.URLEncoding.DecodeString(since)
+				if err != nil {
+					return "", err
+				}
+
+				q += fmt.Sprintf(" WHERE %s.%s > '%s' AND %s.%s <= '%s'",
+					definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], sinceValStr,
+					definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], maxSince)
+			} else {
+				q += fmt.Sprintf(" WHERE %s.%s <= '%s'",
+					definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], maxSince)
+			}
 		}
 	}
 	if limit != 0 {
