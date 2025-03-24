@@ -14,6 +14,8 @@ const (
 	AppendMode     = "append_mode"
 	SinceColumn    = "since_column"
 	EntityColumn   = "entity_column"
+	SinceTable     = "since_table"
+	DataQuery      = "data_query"
 )
 
 type PgsqlConf struct {

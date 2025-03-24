@@ -73,6 +73,24 @@ Dataset definitions are as follows:
     "outgoing_mapping_config": {}
 }
 ```
+
+An alternative to naming the table is to provide a data query, the name of the table that contains the last modified timestamp and the column in that table with the modified column. The configuration in this scenario looks like this:
+
+```json5
+{
+    "name": "products",
+    "source_config": {
+        "data_query" : "The query used to select data ",
+        "since_table": "Optional. The name of the table containing the DateTime column that should be used for getting latest changes",
+        "since_column": "Optional (unless since_table is provided). The name of the column to use to detect changes MUST be of type DateTime in the database",
+        "flush_threshold": "int value with number of entities to update in a batch. recommended is 100 - 1000 depending on number of columns.",
+        "entity_column" : "If the data being mapped contains a JSONB column that contains compliant entity graph data model entity it can be used by naming the column here. When doing so, incoming and outgoing mapped config MUST be omitted."
+    },
+    "incoming_mapping_config": {},
+    "outgoing_mapping_config": {}
+}
+```
+
 Please refer to the common config docs for incoming and outgoing config mappings.
 
 Here is a complete config example:
