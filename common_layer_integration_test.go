@@ -70,12 +70,25 @@ func setup(t *testing.T) testcontainers.Container {
 		t.Fatalf("Failed to create table: %v", err)
 	}
 
+	_, err = conn.Exec(context.Background(), `CREATE TABLE IF NOT EXISTS orders (
+		id VARCHAR PRIMARY KEY, entity JSONB, sequence_no INT);`)
+	if err != nil {
+		t.Fatalf("Failed to create table: %v", err)
+	}
+
 	// add some insert statements to add some entity objects to the customer table
 	_, err = conn.Exec(context.Background(), `INSERT INTO customer (id, entity, last_modified) VALUES
                                                      		('http://data.example.io/customers/1', '{"id": "http://data.example.io/customers/1" }', NOW()),
                                                      		('http://data.example.io/customers/2', '{"id": "http://data.example.io/customers/2" }', NOW()),
                                                      		('http://data.example.io/customers/3', '{"id": "http://data.example.io/customers/3" }', NOW()),
                                                      		('http://data.example.io/customers/4', '{"id": "http://data.example.io/customers/4" }', NOW());
+		`)
+
+	_, err = conn.Exec(context.Background(), `INSERT INTO orders (id, entity, sequence_no) VALUES
+                                                     		('http://data.example.io/customers/1', '{"id": "http://data.example.io/customers/1" }', 0),
+                                                     		('http://data.example.io/customers/2', '{"id": "http://data.example.io/customers/2" }', 1),
+                                                     		('http://data.example.io/customers/3', '{"id": "http://data.example.io/customers/3" }', 2),
+                                                     		('http://data.example.io/customers/4', '{"id": "http://data.example.io/customers/4" }', 3);
 		`)
 
 	if err != nil {
@@ -350,4 +363,73 @@ func TestDatasetEndpoint(t *testing.T) {
 			t.Fatalf("Expected 0 entities, got %d", len(ec.Entities))
 		}
 	})
+
+	t.Run("Should read changes from entity column with int since", func(t *testing.T) {
+
+		ordersUrl := "http://localhost:17777/datasets/orders"
+
+		res, err := http.Get(ordersUrl + "/changes")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// entity graph data model
+		entityParser := egdm.NewEntityParser(egdm.NewNamespaceContext()).WithExpandURIs()
+		ec, err := entityParser.LoadEntityCollection(res.Body)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(ec.Entities) != 4 {
+			t.Fatalf("Expected 4 entities, got %d", len(ec.Entities))
+		}
+
+		// insert new orders
+		_, err = conn.Exec(context.Background(), `INSERT INTO orders (id, entity, sequence_no) VALUES
+                                                     		('http://data.example.io/customers/5', '{"id": "http://data.example.io/customers/5" }', 5);`)
+
+		token := ec.Continuation.Token
+
+		res, err = http.Get(ordersUrl + "/changes?since=" + token)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// entity graph data model
+		entityParser = egdm.NewEntityParser(egdm.NewNamespaceContext()).WithExpandURIs()
+		ec, err = entityParser.LoadEntityCollection(res.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(ec.Entities) != 1 {
+			t.Fatalf("Expected 1 entity, got %d", len(ec.Entities))
+		}
+
+		if ec.Entities[0].ID != "http://data.example.io/customers/5" {
+			t.Fatalf("Expected entity id http://data.example.io/customers/5, got %s", ec.Entities[0].ID)
+		}
+
+		// try again with since token
+		token = ec.Continuation.Token
+		res, err = http.Get(ordersUrl + "/changes?since=" + token)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// entity graph data model
+		entityParser = egdm.NewEntityParser(egdm.NewNamespaceContext()).WithExpandURIs()
+		ec, err = entityParser.LoadEntityCollection(res.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(ec.Entities) != 0 {
+			t.Fatalf("Expected 0 entity, got %d", len(ec.Entities))
+		}
+	})
+
 }
