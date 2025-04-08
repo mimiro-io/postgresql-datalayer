@@ -35,7 +35,7 @@ func (d *Dataset) Entities(from string, limit int) (cdl.EntityIterator, cdl.Laye
 	return d.Changes(from, limit, false)
 }
 
-func getConfigProperty(config map[string]interface{}, key string) string {
+func getStringConfigProperty(config map[string]interface{}, key string) string {
 	val, ok := config[key]
 	if !ok {
 		return ""
@@ -47,19 +47,77 @@ func getConfigProperty(config map[string]interface{}, key string) string {
 	return valStr
 }
 
+func getBooleanConfigProperty(config map[string]interface{}, key string) bool {
+	val, ok := config[key]
+	if !ok {
+		return false
+	}
+
+	valBool, ok := val.(bool)
+	if !ok {
+		return false
+	}
+
+	return valBool
+}
+
+func getNextSinceValue(rows *sql.Rows, datatype string) (string, error) {
+	if datatype == "int" {
+		var maxValue sql.NullInt64
+		err := rows.Scan(&maxValue)
+		if err != nil {
+			return "", err
+		}
+		return strconv.FormatInt(maxValue.Int64, 10), nil
+	} else if datatype == "float" {
+		var maxValue sql.NullFloat64
+		err := rows.Scan(&maxValue)
+		if err != nil {
+			return "", err
+		}
+		return strconv.FormatFloat(maxValue.Float64, 'f', -1, 64), nil
+	} else if datatype == "string" {
+		var maxValue sql.NullString
+		err := rows.Scan(&maxValue)
+		if err != nil {
+			return "", err
+		}
+		return maxValue.String, nil
+	} else if datatype == "time" {
+		var maxValue sql.NullTime
+		err := rows.Scan(&maxValue)
+		if err != nil {
+			return "", err
+		}
+		if maxValue.Valid {
+			return maxValue.Time.Format("2006-01-02 15:04:05.000000"), nil
+		} else {
+			return "", nil
+		}
+	}
+	return "", fmt.Errorf("unsupported datatype: %s", datatype)
+}
+
 func (d *Dataset) newIterator(mapper *cdl.Mapper, since string, limit int) (*dbIterator, cdl.LayerError) {
-	entityColumn := getConfigProperty(d.datasetDefinition.SourceConfig, EntityColumn)
-	sinceCol := getConfigProperty(d.datasetDefinition.SourceConfig, SinceColumn)
+	entityColumn := getStringConfigProperty(d.datasetDefinition.SourceConfig, EntityColumn)
+	sinceCol := getStringConfigProperty(d.datasetDefinition.SourceConfig, SinceColumn)
+	sinceDatatype := getStringConfigProperty(d.datasetDefinition.SourceConfig, SinceDatatype)
+
 	ctx := context.Background() // no timeout because we want to support long running stream operations
 
 	db := d.db.db
 
-	var maxSince sql.NullTime
 	var nextToken string
+	var maxSince string
 
 	if sinceCol != "" {
+		if sinceDatatype == "" {
+			d.logger.Error("since datatype not set in source config")
+			return nil, cdl.Err(fmt.Errorf("since datatype not set in source config"), cdl.LayerErrorInternal)
+		}
+
 		// since table
-		sinceTable := getConfigProperty(d.datasetDefinition.SourceConfig, SinceTable)
+		sinceTable := getStringConfigProperty(d.datasetDefinition.SourceConfig, SinceTable)
 		if sinceTable == "" {
 			sinceTable = d.datasetDefinition.SourceConfig[TableName].(string)
 		}
@@ -80,24 +138,21 @@ func (d *Dataset) newIterator(mapper *cdl.Mapper, since string, limit int) (*dbI
 			return nil, cdl.Err(fmt.Errorf("failed to get max since"), cdl.LayerErrorInternal)
 		}
 
-		err = rows.Scan(&maxSince)
+		newSince, err := getNextSinceValue(rows, sinceDatatype)
 		if err != nil {
-			d.logger.Error("failed to scan max since. ensure column is a DateTime field.", "error", err)
-			return nil, ErrQuery(err)
+			d.logger.Error("failed to get max since", "error", err)
+			return nil, cdl.Err(err, cdl.LayerErrorInternal)
 		}
 
-		newSince := maxSince.Time.Format("2006-01-02 15:04:05.000000")
+		// create encoded since
 		nextToken = base64.URLEncoding.EncodeToString([]byte(newSince))
-	}
 
-	// convert maxSince to string
-	var maxSinceStr string
-	if maxSince.Valid {
-		maxSinceStr = maxSince.Time.Format("2006-01-02 15:04:05.000000")
+		// set max since
+		maxSince = newSince
 	}
 
 	// build the query
-	query, err := buildQuery(d.datasetDefinition, since, maxSinceStr, limit)
+	query, err := buildQuery(d.datasetDefinition, since, maxSince, sinceDatatype, limit)
 	d.logger.Debug(fmt.Sprintf("changes query for dataset %s: %s", d.Name(), query), "dataset", d.Name())
 	if err != nil {
 		d.logger.Error("failed to build query", "error", err)
@@ -172,11 +227,12 @@ func (d *Dataset) newIterator(mapper *cdl.Mapper, since string, limit int) (*dbI
 	}, nil
 }
 
-func buildQuery(definition *cdl.DatasetDefinition, since string, maxSince string, limit int) (string, error) {
-	entityColumn := getConfigProperty(definition.SourceConfig, EntityColumn)
-	sinceColumn := getConfigProperty(definition.SourceConfig, SinceColumn)
-	sinceTable := getConfigProperty(definition.SourceConfig, SinceTable)
-	dataQuery := getConfigProperty(definition.SourceConfig, DataQuery)
+func buildQuery(definition *cdl.DatasetDefinition, since string, maxSince string, sinceDataType string, limit int) (string, error) {
+	entityColumn := getStringConfigProperty(definition.SourceConfig, EntityColumn)
+	sinceColumn := getStringConfigProperty(definition.SourceConfig, SinceColumn)
+	sinceTable := getStringConfigProperty(definition.SourceConfig, SinceTable)
+	dataQuery := getStringConfigProperty(definition.SourceConfig, DataQuery)
+
 	cols := "*"
 	if definition.OutgoingMappingConfig == nil {
 		if entityColumn != "" {
@@ -216,14 +272,14 @@ func buildQuery(definition *cdl.DatasetDefinition, since string, maxSince string
 					return "", err
 				}
 
-				term := connectTerm + " %s.%s > '%s' AND %s.%s <= '%s'"
+				term := connectTerm + " %s.%s > %s AND %s.%s <= %s"
 				q += fmt.Sprintf(term,
-					sinceTable, sinceColumn, sinceValStr,
-					sinceTable, sinceColumn, maxSince)
+					sinceTable, sinceColumn, getQuotedValue(string(sinceValStr), sinceDataType),
+					sinceTable, sinceColumn, getQuotedValue(maxSince, sinceDataType))
 			} else {
-				term := connectTerm + " %s.%s <= '%s'"
+				term := connectTerm + " %s.%s <= %s"
 				q += fmt.Sprintf(term,
-					sinceTable, sinceColumn, maxSince)
+					sinceTable, sinceColumn, getQuotedValue(maxSince, sinceDataType))
 			}
 		} else if sinceColumn != "" {
 			if since != "" {
@@ -232,12 +288,12 @@ func buildQuery(definition *cdl.DatasetDefinition, since string, maxSince string
 					return "", err
 				}
 
-				q += fmt.Sprintf(" WHERE %s.%s > '%s' AND %s.%s <= '%s'",
-					definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], sinceValStr,
-					definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], maxSince)
+				q += fmt.Sprintf(" WHERE %s.%s > %s AND %s.%s <= %s",
+					definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], getQuotedValue(string(sinceValStr), sinceDataType),
+					definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], getQuotedValue(maxSince, sinceDataType))
 			} else {
-				q += fmt.Sprintf(" WHERE %s.%s <= '%s'",
-					definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], maxSince)
+				q += fmt.Sprintf(" WHERE %s.%s <= %s",
+					definition.SourceConfig[TableName], definition.SourceConfig[SinceColumn], getQuotedValue(maxSince, sinceDataType))
 			}
 		}
 	}
@@ -245,6 +301,19 @@ func buildQuery(definition *cdl.DatasetDefinition, since string, maxSince string
 		q += " LIMIT " + strconv.Itoa(limit)
 	}
 	return q, nil
+}
+
+func getQuotedValue(val string, datatype string) string {
+	switch datatype {
+	case "int", "float":
+		return val
+	case "string":
+		return "'" + val + "'"
+	case "time":
+		return "'" + val + "'"
+	default:
+		return "'" + val + "'"
+	}
 }
 
 type dbIterator struct {

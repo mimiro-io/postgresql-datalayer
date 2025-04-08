@@ -19,6 +19,7 @@
             "source_config": {
                 "table_name" : "Product",
                 "since_column" : "Timestamp",
+                "since_datatype" : "time",
                 "flush_threshold": 5
             },
             "incoming_mapping_config": {
@@ -72,6 +73,7 @@
                 "flush_threshold": 5,
                 "since_column" : "Timestamp",
                 "since_table" : "Product",
+                "since_datatype" : "time",
                 "data_query" : "SELECT * from Product"
             },
             "incoming_mapping_config": {
@@ -124,6 +126,16 @@
             "source_config": {
                 "table_name" : "Customer",
                 "since_column" : "last_modified",
+                "since_datatype" : "time",
+                "entity_column" : "entity"
+            }
+        },
+        {
+            "name": "orders",
+            "source_config": {
+                "table_name" : "Orders",
+                "since_column" : "sequence_no",
+                "since_datatype" : "int",
                 "entity_column" : "entity"
             }
         }

@@ -66,8 +66,9 @@ Dataset definitions are as follows:
     "source_config": {
         "table_name": "The name of the table to be exposed or written to",
         "since_column": "Optional. The name of the column to use to detect changes MUST be of type DateTime in the database",
+        "since_datatype" : "Required if since column defined: Allowed values of: time, int, float, string - indicates the since column datatype",
         "flush_threshold": "int value with number of entities to update in a batch. recommended is 100 - 1000 depending on number of columns.",
-        "entity_column" : "If the data being mapped contains a JSONB column that contains compliant entity graph data model entity it can be used by naming the column here. When doing so, incoming and outgoing mapped config MUST be omitted."
+        "entity_column" : "If the data being mapped contains a JSONB column that contains compliant entity graph data model entity it can be used by naming the column here. When doing so, incoming and outgoing mapped config MUST be omitted.",
     },
     "incoming_mapping_config": {},
     "outgoing_mapping_config": {}
@@ -117,6 +118,7 @@ Here is a complete config example:
             "source_config": {
                 "table_name" : "Product",
                 "since_column" : "Timestamp",
+                "since_datatype" : "time",
                 "flush_threshold": 5
             },
             "incoming_mapping_config": {
@@ -169,6 +171,7 @@ Here is a complete config example:
             "source_config": {
                 "table_name" : "Customer",
                 "since_column" : "last_modified",
+                "since_datatype" : "time",
                 "entity_column" : "entity"
             }
         }

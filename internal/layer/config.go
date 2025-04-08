@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	// dataset mapping config
 	TableName      = "table_name"
 	FlushThreshold = "flush_threshold"
 	AppendMode     = "append_mode"
 	SinceColumn    = "since_column"
 	EntityColumn   = "entity_column"
 	SinceTable     = "since_table"
+	SinceDatatype  = "since_datatype"
 	DataQuery      = "data_query"
 )
 
