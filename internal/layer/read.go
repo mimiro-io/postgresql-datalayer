@@ -425,7 +425,9 @@ func (it *dbIterator) Token() (*egdm.Continuation, cdl.LayerError) {
 }
 
 func (it *dbIterator) Close() cdl.LayerError {
+	it.logger.Debug("closing iterator and db rows")
 	err := it.rows.Close()
+	it.logger.Debug("db rows closed")
 	if err != nil {
 		return cdl.Err(err, cdl.LayerErrorInternal)
 	}
