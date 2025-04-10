@@ -337,6 +337,21 @@ func TestDatasetEndpoint(t *testing.T) {
 
 	})
 
+	t.Run("Should error on bad from entity column", func(t *testing.T) {
+		// ignore this test for now
+		t.Skip()
+
+		// insert
+		_, err := conn.Exec(context.Background(), `INSERT INTO customer (id, entity, last_modified) VALUES
+                                                     		('http://data.example.io/customers/7', ' { "id" : "http://data.example.io/customers/7", "refs" : {  "http://data.example.io/customers/worksfor" : null}   }', NOW());
+		`)
+
+		_, rerr := http.Get(customerLayerUrl + "/changes")
+		if rerr == nil {
+			t.Fatal(err)
+		}
+	})
+
 	t.Run("Should read changes from empty table", func(t *testing.T) {
 		// query to delete all rows in product table
 		_, err := conn.Exec(context.Background(), "DELETE FROM product")
