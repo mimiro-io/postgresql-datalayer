@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"github.com/docker/go-connections/nat"
 	"github.com/jackc/pgx/v4"
 	common "github.com/mimiro-io/common-datalayer"
 	egdm "github.com/mimiro-io/entity-graph-data-model"
@@ -11,6 +10,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -39,9 +39,9 @@ func setup(t *testing.T) testcontainers.Container {
 		t.Fatalf("Failed to start container: %v", err)
 	}
 
-	actualPort, _ := postgresC.MappedPort(ctx, nat.Port("5432/tcp"))
+	actualPort, _ := postgresC.MappedPort(ctx, "5432/tcp")
 	ip, _ := postgresC.Host(ctx)
-	port := actualPort.Port()
+	port := strconv.Itoa(int(actualPort.Num()))
 
 	service = common.NewServiceRunner(pgl.NewPgsqlDataLayer).WithConfigLocation("./resources/layer")
 	service = service.WithEnrichConfig(func(config *common.Config) error {
@@ -335,6 +335,21 @@ func TestDatasetEndpoint(t *testing.T) {
 			t.Fatalf("Expected 4 entities, got %d", len(ec.Entities))
 		}
 
+	})
+
+	t.Run("Should error on bad from entity column", func(t *testing.T) {
+		// ignore this test for now
+		t.Skip()
+
+		// insert
+		_, err := conn.Exec(context.Background(), `INSERT INTO customer (id, entity, last_modified) VALUES
+                                                     		('http://data.example.io/customers/7', ' { "id" : "http://data.example.io/customers/7", "refs" : {  "http://data.example.io/customers/worksfor" : null}   }', NOW());
+		`)
+
+		_, rerr := http.Get(customerLayerUrl + "/changes")
+		if rerr == nil {
+			t.Fatal(err)
+		}
 	})
 
 	t.Run("Should read changes from empty table", func(t *testing.T) {
