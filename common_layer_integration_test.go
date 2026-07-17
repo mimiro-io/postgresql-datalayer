@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"github.com/docker/go-connections/nat"
 	"github.com/jackc/pgx/v4"
 	common "github.com/mimiro-io/common-datalayer"
 	egdm "github.com/mimiro-io/entity-graph-data-model"
@@ -11,6 +10,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -39,9 +39,9 @@ func setup(t *testing.T) testcontainers.Container {
 		t.Fatalf("Failed to start container: %v", err)
 	}
 
-	actualPort, _ := postgresC.MappedPort(ctx, nat.Port("5432/tcp"))
+	actualPort, _ := postgresC.MappedPort(ctx, "5432/tcp")
 	ip, _ := postgresC.Host(ctx)
-	port := actualPort.Port()
+	port := strconv.Itoa(int(actualPort.Num()))
 
 	service = common.NewServiceRunner(pgl.NewPgsqlDataLayer).WithConfigLocation("./resources/layer")
 	service = service.WithEnrichConfig(func(config *common.Config) error {
