@@ -25,6 +25,7 @@ type PgsqlConf struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
 	Schema   string `json:"schema"`
+	SslMode  string `json:"sslmode"`
 }
 
 func newPgsqlConf(config *cdl.Config) (*PgsqlConf, cdl.LayerError) {

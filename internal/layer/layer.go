@@ -83,6 +83,7 @@ func EnrichConfig(config *common.Config) error {
 	database := os.Getenv("PGSQL_DATABASE")
 	host := os.Getenv("PGSQL_HOST")
 	port := os.Getenv("PGSQL_PORT")
+	sslMode := os.Getenv("PGSQL_SSLMODE")
 
 	if user != "" {
 		config.NativeSystemConfig["user"] = user
@@ -102,6 +103,10 @@ func EnrichConfig(config *common.Config) error {
 
 	if port != "" {
 		config.NativeSystemConfig["port"] = port
+	}
+
+	if sslMode != "" {
+		config.NativeSystemConfig["sslmode"] = sslMode
 	}
 
 	return nil

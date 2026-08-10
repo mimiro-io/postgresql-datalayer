@@ -19,13 +19,18 @@ func newPgsqlDB(conf *common.Config) (*pgsqlDB, error) {
 		return nil, err
 	}
 
+	if c.SslMode == "" {
+		c.SslMode = "disable"
+	}
+
 	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		c.User,
 		c.Password,
 		c.Hostname,
 		c.Port,
 		c.Database,
+		c.SslMode,
 	)
 
 	// config, cerr := pgx.ParseConfig("postgres://user:pass@localhost:5432/dbname?sslmode=disable")
