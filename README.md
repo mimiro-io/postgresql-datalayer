@@ -52,7 +52,8 @@ The service configuration is as follows:
         "password": "postgres",
         "database": "psql_test",
         "host": "localhost",
-        "port": "5432"
+        "port": "5432",
+        "sslmode": "Optional. Any libpq sslmode value: disable (default), allow, prefer, require, verify-ca, verify-full"
     },
     "dataset_definitions": []
 }
@@ -187,7 +188,11 @@ PGSQL_PASSWORD  # password
 PGSQL_DATABASE  # database name
 PGSQL_HOST      # database server
 PGSQL_PORT      # port of database
+PGSQL_SSLMODE   # TLS mode, defaults to disable
 ```
+
+For `verify-ca` and `verify-full`, point `PGSSLROOTCERT` at the CA certificate file. If it is
+unset, the system root pool is used. Client certificates are read from `PGSSLCERT`/`PGSSLKEY`.
 
 ## Legacy Configuration
 
