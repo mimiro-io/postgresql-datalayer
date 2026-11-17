@@ -2,7 +2,7 @@ package layers
 
 import (
 	"context"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	conf2 "github.com/mimiro-io/postgresql-datalayer/internal/legacy/conf"
 	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/db"
 	"go.uber.org/zap"
@@ -55,7 +55,7 @@ func (postLayer *PostLayer) connect(layer *conf2.Datalayer, name db.DatasetName)
 
 	u := postLayer.cmgr.Datalayer.GetUrl(tableMap, nil)
 
-	conn, err := pgxpool.Connect(context.Background(), u.String())
+	conn, err := pgxpool.New(context.Background(), u.String())
 	if err != nil {
 		postLayer.logger.Warn("Error creating connection pool: ", err.Error())
 		return nil, err

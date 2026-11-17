@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"context"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	common "github.com/mimiro-io/common-datalayer"
 	egdm "github.com/mimiro-io/entity-graph-data-model"
 	pgl "github.com/mimiro-io/postgresql-datalayer/internal/layer"

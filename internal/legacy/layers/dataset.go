@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mimiro-io/internal-go-util/pkg/uda"
 	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/conf"
 	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/db"
@@ -60,7 +60,7 @@ func (ds *PostgresDataset) Write(ctx context.Context, entities <-chan *uda.Entit
 		chunk[count-1] = e
 		if count == batchChunkSize {
 			ds.queueAll(batch, chunk, entityContext)
-			err := ds.pg.BeginFunc(ctx, func(tx pgx.Tx) error {
+			err := pgx.BeginFunc(ctx, ds.pg, func(tx pgx.Tx) error {
 				batchRequest := tx.SendBatch(ctx, batch)
 				defer func() {
 					batchRequest.Close() // make sure to always close the batch request
@@ -83,7 +83,7 @@ func (ds *PostgresDataset) Write(ctx context.Context, entities <-chan *uda.Entit
 	// this deals with the leftover chunk
 	if count > 0 && count < batchChunkSize {
 		ds.queueAll(batch, chunk[0:count], entityContext)
-		return ds.pg.BeginFunc(ctx, func(tx pgx.Tx) error {
+		return pgx.BeginFunc(ctx, ds.pg, func(tx pgx.Tx) error {
 			batchRequest := tx.SendBatch(ctx, batch)
 			defer func() {
 				batchRequest.Close()

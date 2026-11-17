@@ -3,8 +3,8 @@ package layers
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/jackc/pgproto3/v2"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 	conf2 "github.com/mimiro-io/postgresql-datalayer/internal/legacy/conf"
 	"github.com/mimiro-io/postgresql-datalayer/internal/legacy/db"
 	"go.uber.org/fx"
@@ -113,7 +113,7 @@ func (l *Layer) Dataset(request db.DatasetRequest) (ReadableDataset, error) {
 	return NewPostgresDataset(l.Repo.DB, table, nil, request), nil
 }
 
-func buildRowType(colTypes []pgproto3.FieldDescription, values []interface{}, rawValues [][]byte) map[string]interface{} {
+func buildRowType(colTypes []pgconn.FieldDescription, values []interface{}, rawValues [][]byte) map[string]interface{} {
 	nullableRowData := make(map[string]interface{})
 
 	for i, d := range colTypes {
@@ -160,7 +160,7 @@ func (l *Layer) connect(dataset string) (*pgxpool.Pool, error) {
 		}
 	}
 	u := l.cmgr.Datalayer.GetUrl(nil, tableMap)
-	conn, err := pgxpool.Connect(context.Background(), u.String())
+	conn, err := pgxpool.New(context.Background(), u.String())
 	if err != nil {
 		l.logger.Warn("Error creating connection pool: ", err.Error())
 		return nil, err

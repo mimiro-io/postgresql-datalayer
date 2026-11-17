@@ -5,9 +5,8 @@ package postgres
 
 import (
 	"context"
-	"github.com/docker/go-connections/nat"
 	"github.com/franela/goblin"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/fx"
@@ -15,6 +14,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -45,9 +45,9 @@ func TestIntegration(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			actualPort, _ := postgresC.MappedPort(ctx, nat.Port("5432/tcp"))
+			actualPort, _ := postgresC.MappedPort(ctx, "5432/tcp")
 			ip, _ := postgresC.Host(ctx)
-			port := actualPort.Port()
+			port := strconv.Itoa(int(actualPort.Num()))
 
 			testConf := replaceTestConf("./resources/test/test-config.json", ip, port, t)
 			defer os.Remove(testConf.Name())

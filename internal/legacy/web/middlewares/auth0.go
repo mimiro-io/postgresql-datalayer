@@ -3,8 +3,9 @@ package middlewares
 import (
 	"encoding/json"
 	"errors"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -34,7 +35,7 @@ type CustomClaims struct {
 	Scope string `json:"scope"`
 	Gty   string `json:"gty"`
 	Adm   bool   `json:"adm"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func (claims CustomClaims) scopes() []string {
@@ -61,9 +62,7 @@ type JSONWebKeys struct {
 // Errors
 var (
 	ErrJWTMissing = echo.NewHTTPError(http.StatusBadRequest, "missing or malformed jwt")
-	parser        = jwt.Parser{
-		ValidMethods: []string{"RS256"},
-	}
+	parser        = jwt.NewParser(jwt.WithValidMethods([]string{"RS256"}), jwt.WithIssuedAt())
 )
 
 func newCache(wellknown string) cache.LoadingCache {
@@ -140,17 +139,7 @@ func JWTHandler(config *Auth0Config) echo.MiddlewareFunc {
 				issuer = config.Issuer
 			}
 
-			checkAud := claims.VerifyAudience(audience, false)
-			if !checkAud {
-				err = errors.New("invalid audience")
-			}
-
-			checkIss := claims.VerifyIssuer(issuer, false)
-			if !checkIss {
-				err = errors.New("invalid issuer")
-			}
-
-			if err == nil {
+			if err = verifyAudienceAndIssuer(claims, audience, issuer); err == nil {
 				c.Set("user", token)
 				return next(c)
 			}
@@ -158,6 +147,17 @@ func JWTHandler(config *Auth0Config) echo.MiddlewareFunc {
 			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 		}
 	}
+}
+
+// verifyAudienceAndIssuer accepts a token without aud or iss claims, and otherwise requires them to match.
+func verifyAudienceAndIssuer(claims *CustomClaims, audience string, issuer string) error {
+	if claims.Issuer != "" && claims.Issuer != issuer {
+		return errors.New("invalid issuer")
+	}
+	if len(claims.Audience) > 0 && !slices.Contains(claims.Audience, audience) {
+		return errors.New("invalid audience")
+	}
+	return nil
 }
 
 func (config *Auth0Config) SigningKey() func(token *jwt.Token) string {
